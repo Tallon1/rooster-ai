@@ -4,6 +4,9 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { ApiResponse } from '@rooster-ai/shared';
 
+// Import routes
+import authRoutes from './routes/auth.routes';
+
 // Load environment variables
 dotenv.config();
 
@@ -15,6 +18,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Basic health check route
 app.get('/health', (req: Request, res: Response) => {
@@ -44,7 +50,7 @@ app.get('/api', (req: Request, res: Response) => {
 // Start server
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`íº€ Server running on port ${PORT}`);
+    console.log(`ðŸš€ Server running on port ${PORT}`);
   });
 }
 
