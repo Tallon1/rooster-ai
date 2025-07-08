@@ -7,33 +7,7 @@ import { useRosterStore } from "@/store/rosterStore";
 import ShiftCard from "./ShiftCard";
 import AddShiftModal from "./AddShiftModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-
-// Define frontend-specific types that match the API response
-interface RosterShift {
-  id: string;
-  startTime: string | Date;
-  endTime: string | Date;
-  position: string;
-  notes?: string;
-  isConfirmed: boolean;
-  staff: {
-    id: string;
-    name: string;
-    email: string;
-    position: string;
-    department: string;
-    avatar?: string;
-  };
-}
-
-interface FrontendRoster {
-  id: string;
-  name: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  isPublished: boolean;
-  shifts: RosterShift[];
-}
+import { FrontendRoster, RosterShift } from "@/types/roster.types";
 
 interface WeeklyRosterProps {
   weekStart: Date;
@@ -57,7 +31,7 @@ export default function WeeklyRoster({
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const hours = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM to 10 PM
 
-  const getShiftsForDateAndHour = (date: Date, hour: number) => {
+  const getShiftsForDateAndHour = (date: Date, hour: number): RosterShift[] => {
     if (!roster) return [];
 
     return roster.shifts.filter((shift) => {
@@ -125,8 +99,8 @@ export default function WeeklyRoster({
         <AddShiftModal
           isOpen={!!selectedSlot}
           onClose={() => setSelectedSlot(null)}
-          rosterId={roster?.id || ""}
           selectedDate={selectedSlot.date}
+          rosterId={roster?.id || ""}
         />
       )}
     </>

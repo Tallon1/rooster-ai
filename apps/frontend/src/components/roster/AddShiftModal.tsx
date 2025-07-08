@@ -21,8 +21,8 @@ type AddShiftFormData = z.infer<typeof addShiftSchema>;
 interface AddShiftModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedDate: Date;
   rosterId: string;
-  selectedDate?: Date;
 }
 
 export default function AddShiftModal({

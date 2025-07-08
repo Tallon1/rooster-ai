@@ -5,21 +5,10 @@ import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { Menu, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { useRosterStore } from "@/store/rosterStore";
+import { RosterShift } from "@/types/roster.types";
 
 interface ShiftCardProps {
-  shift: {
-    id: string;
-    startTime: string | Date;
-    endTime: string | Date;
-    position: string;
-    notes?: string;
-    isConfirmed: boolean;
-    staff: {
-      id: string;
-      name: string;
-      position: string;
-    };
-  };
+  shift: RosterShift;
 }
 
 export default function ShiftCard({ shift }: ShiftCardProps) {
@@ -35,9 +24,9 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
     await updateShift(shift.id, { isConfirmed: !shift.isConfirmed });
   };
 
-  const startTime = new Date(shift.startTime);
-  const endTime = new Date(shift.endTime);
-  const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+  const duration =
+    (new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) /
+    (1000 * 60 * 60);
 
   return (
     <div
@@ -54,7 +43,8 @@ export default function ShiftCard({ shift }: ShiftCardProps) {
           </p>
           <p className="text-gray-600 truncate">{shift.position}</p>
           <p className="text-gray-500">
-            {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
+            {format(new Date(shift.startTime), "h:mm a")} -{" "}
+            {format(new Date(shift.endTime), "h:mm a")}
           </p>
           <p className="text-gray-500">{duration.toFixed(1)}h</p>
         </div>
