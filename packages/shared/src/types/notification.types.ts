@@ -1,4 +1,4 @@
-import { BaseEntity } from './common.types';
+import { BaseEntity } from "./common.types";
 
 export interface Notification extends BaseEntity {
   userId: string;
@@ -9,11 +9,12 @@ export interface Notification extends BaseEntity {
   data?: Record<string, any>;
 }
 
-export type NotificationType = 
-  | 'roster_published' 
-  | 'shift_assigned' 
-  | 'shift_changed' 
-  | 'system_update';
+export type NotificationType =
+  | "roster_published"
+  | "shift_assigned"
+  | "shift_changed"
+  | "shift_cancelled"
+  | "system_update";
 
 export interface NotificationPreferences {
   email: boolean;
