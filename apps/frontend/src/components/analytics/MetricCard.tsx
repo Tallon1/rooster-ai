@@ -1,15 +1,16 @@
 "use client";
 
-import { clsx } from "clsx";
-
 interface MetricCardProps {
   title: string;
-  value: number | string;
+  value: string | number;
   subtitle?: string;
   trend?: number;
   trendLabel?: string;
+  change?: {
+    value: number;
+    type: "increase" | "decrease";
+  };
   icon?: React.ComponentType<{ className?: string }>;
-  className?: string;
 }
 
 export default function MetricCard({
@@ -18,13 +19,11 @@ export default function MetricCard({
   subtitle,
   trend,
   trendLabel,
+  change,
   icon: Icon,
-  className,
 }: MetricCardProps) {
   return (
-    <div
-      className={clsx("bg-white overflow-hidden shadow rounded-lg", className)}
-    >
+    <div className="bg-white overflow-hidden shadow rounded-lg">
       <div className="p-5">
         <div className="flex items-center">
           <div className="flex-shrink-0">
@@ -35,32 +34,55 @@ export default function MetricCard({
               <dt className="text-sm font-medium text-gray-500 truncate">
                 {title}
               </dt>
-              <dd className="flex items-baseline">
-                <div className="text-2xl font-semibold text-gray-900">
-                  {value}
-                </div>
-                {subtitle && (
-                  <div className="ml-2 text-sm text-gray-500">{subtitle}</div>
-                )}
-              </dd>
+              <dd className="text-lg font-medium text-gray-900">{value}</dd>
+              {subtitle && (
+                <dd className="text-sm text-gray-500">{subtitle}</dd>
+              )}
             </dl>
           </div>
         </div>
 
-        {trend !== undefined && trendLabel && (
-          <div className="mt-3 flex items-center">
-            <div
-              className={clsx(
-                "flex items-center text-sm font-medium",
-                trend >= 0 ? "text-green-600" : "text-red-600"
+        {(change || trend !== undefined) && (
+          <div className="mt-4">
+            <div className="flex items-center">
+              {change && (
+                <span
+                  className={`text-sm font-medium ${
+                    change.type === "increase"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {change.type === "increase" ? "+" : "-"}
+                  {Math.abs(change.value)}%
+                </span>
               )}
-            >
-              <span>
-                {trend >= 0 ? "+" : ""}
-                {trend}%
-              </span>
+
+              {trend !== undefined && (
+                <span
+                  className={`text-sm font-medium ${
+                    trend > 0
+                      ? "text-green-600"
+                      : trend < 0
+                        ? "text-red-600"
+                        : "text-gray-600"
+                  }`}
+                >
+                  {trend > 0 ? "+" : ""}
+                  {trend}%
+                </span>
+              )}
+
+              {trendLabel && (
+                <span className="text-sm text-gray-500 ml-2">{trendLabel}</span>
+              )}
+
+              {change && (
+                <span className="text-sm text-gray-500 ml-2">
+                  from last month
+                </span>
+              )}
             </div>
-            <div className="ml-2 text-sm text-gray-500">{trendLabel}</div>
           </div>
         )}
       </div>

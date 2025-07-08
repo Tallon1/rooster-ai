@@ -2,17 +2,43 @@
 
 import { useState } from "react";
 import { format, addDays, isSameDay } from "date-fns";
-import { Roster } from "@rooster-ai/shared";
 import { useStaffStore } from "@/store/staffStore";
 import { useRosterStore } from "@/store/rosterStore";
 import ShiftCard from "./ShiftCard";
 import AddShiftModal from "./AddShiftModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
+// Define frontend-specific types that match the API response
+interface RosterShift {
+  id: string;
+  startTime: string | Date;
+  endTime: string | Date;
+  position: string;
+  notes?: string;
+  isConfirmed: boolean;
+  staff: {
+    id: string;
+    name: string;
+    email: string;
+    position: string;
+    department: string;
+    avatar?: string;
+  };
+}
+
+interface FrontendRoster {
+  id: string;
+  name: string;
+  startDate: string | Date;
+  endDate: string | Date;
+  isPublished: boolean;
+  shifts: RosterShift[];
+}
+
 interface WeeklyRosterProps {
   weekStart: Date;
   weekEnd: Date;
-  roster: Roster | null;
+  roster: FrontendRoster | null;
   isLoading: boolean;
 }
 
@@ -39,12 +65,6 @@ export default function WeeklyRoster({
       const shiftHour = shiftStart.getHours();
       return isSameDay(shiftStart, date) && shiftHour === hour;
     });
-  };
-
-  const handleSlotClick = (date: Date, hour: number) => {
-    if (roster) {
-      setSelectedSlot({ date, hour });
-    }
   };
 
   if (isLoading) {
@@ -82,12 +102,11 @@ export default function WeeklyRoster({
               </div>
               {days.map((day) => {
                 const shifts = getShiftsForDateAndHour(day, hour);
-
                 return (
                   <div
                     key={`${day.toISOString()}-${hour}`}
-                    className="bg-white p-2 min-h-[80px] cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => handleSlotClick(day, hour)}
+                    className="bg-white p-2 min-h-[80px] border-b hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setSelectedSlot({ date: day, hour })}
                   >
                     <div className="space-y-1">
                       {shifts.map((shift) => (
@@ -102,14 +121,12 @@ export default function WeeklyRoster({
         </div>
       </div>
 
-      {/* Add Shift Modal - Only render if roster exists */}
-      {selectedSlot && roster && (
+      {selectedSlot && (
         <AddShiftModal
           isOpen={!!selectedSlot}
           onClose={() => setSelectedSlot(null)}
-          rosterId={roster.id} // Now roster.id is guaranteed to be string
+          rosterId={roster?.id || ""}
           selectedDate={selectedSlot.date}
-          selectedHour={selectedSlot.hour}
         />
       )}
     </>

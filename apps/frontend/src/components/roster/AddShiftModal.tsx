@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { useStaffStore } from "@/store/staffStore";
@@ -24,8 +22,7 @@ interface AddShiftModalProps {
   isOpen: boolean;
   onClose: () => void;
   rosterId: string;
-  selectedDate: Date;
-  selectedHour: number;
+  selectedDate?: Date;
 }
 
 export default function AddShiftModal({
@@ -33,7 +30,6 @@ export default function AddShiftModal({
   onClose,
   rosterId,
   selectedDate,
-  selectedHour,
 }: AddShiftModalProps) {
   const { staff } = useStaffStore();
   const { addShift, isLoading } = useRosterStore();
@@ -46,27 +42,23 @@ export default function AddShiftModal({
   } = useForm<AddShiftFormData>({
     resolver: zodResolver(addShiftSchema),
     defaultValues: {
-      startTime: `${selectedHour.toString().padStart(2, "0")}:00`,
-      endTime: `${(selectedHour + 1).toString().padStart(2, "0")}:00`,
+      startTime: "09:00",
+      endTime: "17:00",
     },
   });
 
   const onSubmit = async (data: AddShiftFormData) => {
     try {
-      const startDateTime = new Date(selectedDate);
-      const [startHour, startMinute] = data.startTime.split(":").map(Number);
-      startDateTime.setHours(startHour, startMinute, 0, 0);
+      const baseDate = selectedDate || new Date();
+      const dateStr = baseDate.toISOString().split("T")[0];
 
-      const endDateTime = new Date(selectedDate);
-      const [endHour, endMinute] = data.endTime.split(":").map(Number);
-      endDateTime.setHours(endHour, endMinute, 0, 0);
+      const startDateTime = new Date(`${dateStr}T${data.startTime}:00`);
+      const endDateTime = new Date(`${dateStr}T${data.endTime}:00`);
 
       await addShift(rosterId, {
-        staffId: data.staffId,
+        ...data,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        position: data.position,
-        notes: data.notes,
       });
 
       reset();
@@ -76,14 +68,19 @@ export default function AddShiftModal({
     }
   };
 
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
-      title={`Add Shift - ${format(selectedDate, "EEEE, MMM d, yyyy")}`}
+      onClose={handleClose}
+      title="Add New Shift"
       footer={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button type="submit" form="add-shift-form" loading={isLoading}>
@@ -98,15 +95,12 @@ export default function AddShiftModal({
         className="space-y-4"
       >
         <div>
-          <label
-            htmlFor="staffId"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             Staff Member
           </label>
           <select
             {...register("staffId")}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           >
             <option value="">Select staff member</option>
             {staff.map((member) => (
@@ -124,16 +118,13 @@ export default function AddShiftModal({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label
-              htmlFor="startTime"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Start Time
             </label>
             <input
-              {...register("startTime")}
               type="time"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              {...register("startTime")}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             />
             {errors.startTime && (
               <p className="mt-1 text-sm text-red-600">
@@ -143,16 +134,13 @@ export default function AddShiftModal({
           </div>
 
           <div>
-            <label
-              htmlFor="endTime"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               End Time
             </label>
             <input
-              {...register("endTime")}
               type="time"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              {...register("endTime")}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             />
             {errors.endTime && (
               <p className="mt-1 text-sm text-red-600">
@@ -163,17 +151,14 @@ export default function AddShiftModal({
         </div>
 
         <div>
-          <label
-            htmlFor="position"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             Position
           </label>
           <input
-            {...register("position")}
             type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-            placeholder="e.g., Server, Bartender, Cook"
+            {...register("position")}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="e.g., Server, Cook, Bartender"
           />
           {errors.position && (
             <p className="mt-1 text-sm text-red-600">
@@ -183,16 +168,13 @@ export default function AddShiftModal({
         </div>
 
         <div>
-          <label
-            htmlFor="notes"
-            className="block text-sm font-medium text-gray-700"
-          >
+          <label className="block text-sm font-medium text-gray-700">
             Notes (Optional)
           </label>
           <textarea
             {...register("notes")}
             rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             placeholder="Any additional notes for this shift..."
           />
         </div>

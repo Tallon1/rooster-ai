@@ -14,6 +14,7 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.1.1",
     "@rooster-ai/shared": "workspace:*",
+    "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
