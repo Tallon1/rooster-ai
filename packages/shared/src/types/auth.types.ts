@@ -14,7 +14,7 @@ export interface AuthToken {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  tokenType: 'Bearer';
+  tokenType: "Bearer";
 }
 
 export interface LoginCredentials {
