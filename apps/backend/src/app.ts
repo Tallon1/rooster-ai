@@ -7,6 +7,7 @@ import { ApiResponse } from "@rooster-ai/shared";
 // Import routes
 import authRoutes from "./routes/auth.routes";
 import staffRoutes from "./routes/staff.routes";
+import rosterRoutes from "./routes/roster.routes";
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/rosters", rosterRoutes);
 
 // Basic health check route
 app.get("/health", (req: Request, res: Response) => {
