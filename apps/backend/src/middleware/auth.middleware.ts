@@ -19,7 +19,7 @@ declare global {
   }
 }
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -29,7 +29,8 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         success: false,
         error: 'Access token required'
       };
-      return res.status(401).json(response);
+      res.status(401).json(response);
+      return;
     }
 
     // Verify token
@@ -46,7 +47,8 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         success: false,
         error: 'Invalid or expired token'
       };
-      return res.status(401).json(response);
+      res.status(401).json(response);
+      return;
     }
 
     // Add user info to request
@@ -68,13 +70,14 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 };
 
 export const requireRole = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
       const response: ApiResponse = {
         success: false,
         error: 'Authentication required'
       };
-      return res.status(401).json(response);
+      res.status(401).json(response);
+      return;
     }
 
     if (!roles.includes(req.user.role)) {
@@ -82,7 +85,8 @@ export const requireRole = (roles: string[]) => {
         success: false,
         error: 'Insufficient permissions'
       };
-      return res.status(403).json(response);
+      res.status(403).json(response);
+      return;
     }
 
     next();
