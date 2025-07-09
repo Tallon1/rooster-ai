@@ -13,36 +13,86 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Tenant model for multi-tenancy
+// Enhanced Tenant/Company model with new limits
 model Tenant {
-  id          String   @id @default(cuid())
-  name        String
-  domain      String   @unique
-  isActive    Boolean  @default(true)
-  maxUsers    Int      @default(50)
-  settings    Json     @default("{}")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  domain        String   @unique
+  address       String?  // Added for company registration
+  employeeCount Int?     // Added for company registration
+  isActive      Boolean  @default(true)
+  
+  // New company limits as per requirements
+  userLimit     Int      @default(50)    // Total user limit per company
+  managerLimit  Int      @default(10)    // Manager user limit per company
+  tokenLimit    Int      @default(50000) // Monthly OpenAI token limit
+  
+  settings      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  users       User[]
-  staff       Staff[]
-  rosters     Roster[]
-  roles       Role[]
-  auditLogs   AuditLog[]
+  users         User[]
+  staff         Staff[]
+  rosters       Roster[]
+  roles         Role[]
+  auditLogs     AuditLog[]
+  storeLocations StoreLocation[]
+  tokenUsage    TokenUsage[]
+  rosterFolders RosterFolder[]
 
   @@map("tenants")
 }
 
-// User model for authentication
+// New StoreLocation entity for multi-location support
+model StoreLocation {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Company relationship
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  staffAssignments StaffStoreLocation[]
+
+  @@map("store_locations")
+}
+
+// Junction table for staff-store location assignments
+model StaffStoreLocation {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relationships
+  staffId         String
+  staff           Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  storeLocationId String
+  storeLocation   StoreLocation @relation(fields: [storeLocationId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, storeLocationId])
+  @@map("staff_store_locations")
+}
+
+// Enhanced User model with phone field
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
   name         String
   passwordHash String
+  phone        String?   // Added phone number field
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   preferences  Json      @default("{}")
+  
+  // 2FA fields
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+  
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -55,16 +105,17 @@ model User {
   role         Role      @relation(fields: [roleId], references: [id])
 
   // Relations
-  auditLogs    AuditLog[]
+  auditLogs     AuditLog[]
   notifications Notification[]
+  tokenUsage    TokenUsage[]
 
   @@map("users")
 }
 
-// Role model for RBAC
+// Enhanced Role model with proper 4-tier hierarchy
 model Role {
   id          String   @id @default(cuid())
-  name        String
+  name        String   // admin, owner, manager, staff
   description String?
   permissions Json     @default("[]")
   isSystem    Boolean  @default(false)
@@ -82,7 +133,7 @@ model Role {
   @@map("roles")
 }
 
-// Staff model for roster management
+// Enhanced Staff model with store location support
 model Staff {
   id           String    @id @default(cuid())
   name         String
@@ -96,6 +147,12 @@ model Staff {
   isActive     Boolean   @default(true)
   avatar       String?
   preferences  Json      @default("{}")
+  
+  // New fields for enhanced registration
+  weeklyAvailability String[] @default([])
+  shiftPreferences   String[] @default([])
+  contractType       String?
+  
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -104,14 +161,15 @@ model Staff {
   tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   // Relations
-  shifts       Shift[]
-  availability StaffAvailability[]
+  shifts              Shift[]
+  availability        StaffAvailability[]
+  storeAssignments    StaffStoreLocation[]
 
   @@unique([tenantId, email])
   @@map("staff")
 }
 
-// Staff availability model
+// Existing models with enhancements
 model StaffAvailability {
   id        String   @id @default(cuid())
   dayOfWeek Int      // 0 = Sunday, 1 = Monday, etc.
@@ -128,7 +186,7 @@ model StaffAvailability {
   @@map("staff_availability")
 }
 
-// Roster model
+// Enhanced Roster model with folder support
 model Roster {
   id          String   @id @default(cuid())
   name        String
@@ -137,6 +195,11 @@ model Roster {
   isPublished Boolean  @default(false)
   isTemplate  Boolean  @default(false)
   notes       String?
+  
+  // New folder organization feature
+  folderId    String?
+  folder      RosterFolder? @relation(fields: [folderId], references: [id])
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -150,7 +213,26 @@ model Roster {
   @@map("rosters")
 }
 
-// Shift model
+// New RosterFolder model for organization
+model RosterFolder {
+  id        String   @id @default(cuid())
+  name      String
+  color     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenant relationship
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  rosters   Roster[]
+
+  @@map("roster_folders")
+}
+
+// Existing Shift model (unchanged)
 model Shift {
   id          String   @id @default(cuid())
   startTime   DateTime
@@ -171,7 +253,28 @@ model Shift {
   @@map("shifts")
 }
 
-// Notification model
+// New TokenUsage model for AI tracking
+model TokenUsage {
+  id          String   @id @default(cuid())
+  month       Int      // 1-12
+  year        Int
+  tokensUsed  Int      @default(0)
+  cost        Decimal  @db.Decimal(10, 4) @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, month, year])
+  @@map("token_usage")
+}
+
+// Existing models remain unchanged
 model Notification {
   id        String   @id @default(cuid())
   title     String
@@ -189,7 +292,6 @@ model Notification {
   @@map("notifications")
 }
 
-// Audit log model for compliance
 model AuditLog {
   id        String   @id @default(cuid())
   action    String

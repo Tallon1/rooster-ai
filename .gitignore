@@ -50,4 +50,6 @@ Thumbs.db
 # Turbo
 .turbo/
 
+# Prisma
 /generated/prisma
+/apps/backend/src/scripts/seed.ts
