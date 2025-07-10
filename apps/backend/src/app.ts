@@ -14,6 +14,7 @@ import notificationRoutes from "./routes/notification.routes";
 import exportRoutes from "./routes/export.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
+import ownerRoutes from "./routes/owner.routes";
 
 // Load environment variables
 dotenv.config();
@@ -44,8 +45,9 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-// New admin routes
+// New enhanced routes
 app.use("/api/admin", adminRoutes);
+app.use("/api/owner", ownerRoutes);
 
 // Basic health check route
 app.get("/health", (req: Request, res: Response) => {
@@ -61,7 +63,7 @@ app.get("/health", (req: Request, res: Response) => {
   res.json(response);
 });
 
-// Enhanced API route with new admin features
+// Enhanced API route with new features
 app.get("/api", (req: Request, res: Response) => {
   const response: ApiResponse = {
     success: true,
@@ -78,6 +80,7 @@ app.get("/api", (req: Request, res: Response) => {
         "Company Management",
         "Token Tracking",
         "Store Locations",
+        "Owner Dashboard",
       ],
     },
   };

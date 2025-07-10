@@ -179,6 +179,313 @@ export class CompanyService {
   }
 
   /**
+   * Get company overview for Owner dashboard
+   * Provides comprehensive company statistics and information
+   */
+  async getCompanyOverview(companyId: string, ownerUserId: string) {
+    try {
+      // Validate owner access
+      const owner = await this.validateOwnerAccess(ownerUserId, companyId);
+
+      // Get comprehensive company data
+      const company = await prisma.tenant.findUnique({
+        where: { id: companyId },
+        include: {
+          storeLocations: {
+            where: { isActive: true },
+            orderBy: { name: "asc" },
+          },
+          users: {
+            include: {
+              role: true,
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          staff: {
+            where: { isActive: true },
+            include: {
+              storeAssignments: {
+                include: {
+                  storeLocation: true,
+                },
+              },
+            },
+            orderBy: { name: "asc" },
+          },
+          rosters: {
+            where: {
+              createdAt: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+              },
+            },
+            include: {
+              shifts: true,
+            },
+            orderBy: { createdAt: "desc" },
+            take: 10,
+          },
+          tokenUsage: {
+            where: {
+              month: new Date().getMonth() + 1,
+              year: new Date().getFullYear(),
+            },
+          },
+          _count: {
+            select: {
+              users: true,
+              staff: true,
+              rosters: true,
+              storeLocations: true,
+            },
+          },
+        },
+      });
+
+      if (!company) {
+        throw new Error("Company not found");
+      }
+
+      // Calculate statistics
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+
+      // Get additional statistics
+      const [publishedRosters, totalShifts, upcomingShifts, monthlyTokenUsage] =
+        await Promise.all([
+          prisma.roster.count({
+            where: {
+              tenantId: companyId,
+              isPublished: true,
+              createdAt: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              },
+            },
+          }),
+          prisma.shift.count({
+            where: {
+              roster: {
+                tenantId: companyId,
+              },
+              startTime: {
+                gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+              },
+            },
+          }),
+          prisma.shift.count({
+            where: {
+              roster: {
+                tenantId: companyId,
+              },
+              startTime: {
+                gte: currentDate,
+              },
+            },
+          }),
+          prisma.tokenUsage.aggregate({
+            where: {
+              tenantId: companyId,
+              month: currentMonth,
+              year: currentYear,
+            },
+            _sum: {
+              tokensUsed: true,
+              cost: true,
+            },
+          }),
+        ]);
+
+      // Process user statistics by role
+      const usersByRole = company.users.reduce(
+        (acc, user) => {
+          const roleName = user.role.name;
+          acc[roleName] = (acc[roleName] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      // Process staff by department
+      const staffByDepartment = company.staff.reduce(
+        (acc, staff) => {
+          acc[staff.department] = (acc[staff.department] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      // Calculate token usage
+      const tokensUsed = monthlyTokenUsage._sum.tokensUsed || 0;
+      const tokenCost = monthlyTokenUsage._sum.cost
+        ? typeof monthlyTokenUsage._sum.cost === "object"
+          ? monthlyTokenUsage._sum.cost.toNumber()
+          : monthlyTokenUsage._sum.cost
+        : 0;
+
+      return {
+        company: {
+          id: company.id,
+          name: company.name,
+          address: company.address,
+          employeeCount: company.employeeCount,
+          userLimit: company.userLimit,
+          managerLimit: company.managerLimit,
+          tokenLimit: company.tokenLimit,
+          settings: company.settings,
+          createdAt: company.createdAt,
+        },
+        statistics: {
+          users: {
+            total: company._count.users,
+            byRole: usersByRole,
+            remaining: company.userLimit - company._count.users,
+          },
+          staff: {
+            total: company._count.staff,
+            byDepartment: staffByDepartment,
+            active: company.staff.length,
+          },
+          rosters: {
+            total: company._count.rosters,
+            published: publishedRosters,
+            recent: company.rosters.length,
+          },
+          shifts: {
+            total: totalShifts,
+            upcoming: upcomingShifts,
+          },
+          storeLocations: {
+            total: company._count.storeLocations,
+            active: company.storeLocations.length,
+          },
+          tokens: {
+            used: tokensUsed,
+            limit: company.tokenLimit,
+            remaining: company.tokenLimit - tokensUsed,
+            cost: tokenCost,
+            utilizationPercentage: (tokensUsed / company.tokenLimit) * 100,
+          },
+        },
+        storeLocations: company.storeLocations,
+        recentUsers: company.users.slice(0, 5),
+        recentRosters: company.rosters,
+        staffOverview: company.staff.map((staff) => ({
+          id: staff.id,
+          name: staff.name,
+          position: staff.position,
+          department: staff.department,
+          storeLocations: staff.storeAssignments.map(
+            (assignment) => assignment.storeLocation.name
+          ),
+        })),
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Failed to fetch company overview: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Update company settings for Owner users
+   * Allows owners to modify company preferences and configuration
+   */
+  async updateCompanySettings(
+    companyId: string,
+    settings: Record<string, any>,
+    ownerUserId: string
+  ) {
+    try {
+      // Validate owner access
+      const owner = await this.validateOwnerAccess(ownerUserId, companyId);
+
+      // Get existing company
+      const existingCompany = await prisma.tenant.findUnique({
+        where: { id: companyId },
+      });
+
+      if (!existingCompany) {
+        throw new Error("Company not found");
+      }
+
+      // Merge settings with existing settings
+      const currentSettings =
+        (existingCompany.settings as Record<string, any>) || {};
+      const updatedSettings = {
+        ...currentSettings,
+        ...settings,
+        updatedAt: new Date().toISOString(),
+        updatedBy: ownerUserId,
+      };
+
+      // Update company settings
+      const updatedCompany = await prisma.tenant.update({
+        where: { id: companyId },
+        data: {
+          settings: updatedSettings as Prisma.InputJsonValue,
+        },
+        include: {
+          storeLocations: true,
+          users: {
+            include: {
+              role: true,
+            },
+          },
+          _count: {
+            select: {
+              users: true,
+              staff: true,
+              rosters: true,
+            },
+          },
+        },
+      });
+
+      // Log the settings update for audit
+      await this.logCompanyAction(
+        ownerUserId,
+        companyId,
+        "SETTINGS_UPDATE",
+        { settings: currentSettings },
+        { settings: updatedSettings }
+      );
+
+      return updatedCompany;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Failed to update company settings: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Private helper method to validate Owner access
+   */
+  private async validateOwnerAccess(userId: string, companyId?: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+        tenant: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      throw new Error("User not found or inactive");
+    }
+
+    if (user.role.name !== "owner") {
+      throw new Error("Owner access required");
+    }
+
+    if (companyId && user.tenantId !== companyId) {
+      throw new Error("Access denied: User does not belong to this company");
+    }
+
+    return user;
+  }
+
+  /**
    * Get company by ID with full details
    * Admin-only access
    */

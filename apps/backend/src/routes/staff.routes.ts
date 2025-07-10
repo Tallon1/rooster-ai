@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import type { Router as ExpressRouter } from 'express';
+import { Router } from "express";
+import type { Router as ExpressRouter } from "express";
 import {
   createStaff,
   getStaff,
@@ -7,9 +7,9 @@ import {
   updateStaff,
   deleteStaff,
   getStaffStats,
-  updateStaffAvailability
-} from '../controllers/staff.controller';
-import { authenticateToken, requireRole } from '../middleware/auth.middleware';
+  updateStaffAvailability,
+} from "../controllers/staff.controller";
+import { authenticateToken, requireRole } from "../middleware/auth.middleware";
 
 const router: ExpressRouter = Router();
 
@@ -17,14 +17,18 @@ const router: ExpressRouter = Router();
 router.use(authenticateToken);
 
 // Staff CRUD operations
-router.post('/', requireRole(['admin', 'manager']), createStaff);
-router.get('/stats', requireRole(['admin', 'manager']), getStaffStats);
-router.get('/', getAllStaff);
-router.get('/:id', getStaff);
-router.put('/:id', requireRole(['admin', 'manager']), updateStaff);
-router.delete('/:id', requireRole(['admin']), deleteStaff);
+router.post("/", requireRole(["admin", "owner", "manager"]), createStaff);
+router.get("/stats", requireRole(["admin", "owner", "manager"]), getStaffStats);
+router.get("/", getAllStaff); // All authenticated users can view staff list
+router.get("/:id", getStaff);
+router.put("/:id", requireRole(["admin", "owner", "manager"]), updateStaff);
+router.delete("/:id", requireRole(["admin", "owner"]), deleteStaff);
 
 // Staff availability management
-router.put('/:id/availability', requireRole(['admin', 'manager']), updateStaffAvailability);
+router.put(
+  "/:id/availability",
+  requireRole(["admin", "owner", "manager"]),
+  updateStaffAvailability
+);
 
 export default router;

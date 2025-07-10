@@ -47,6 +47,121 @@ export class UserManagementService {
     return user;
   }
 
+  /**
+   * Get all users for a specific company (Owner access)
+   */
+  async getCompanyUsers(companyId: string, ownerUserId: string) {
+    try {
+      // Validate owner access
+      const owner = await this.validateOwnerAccess(ownerUserId, companyId);
+
+      const users = await prisma.user.findMany({
+        where: {
+          tenantId: companyId,
+          role: {
+            name: {
+              in: ["manager", "staff"], // Owners can see Managers and Staff
+            },
+          },
+        },
+        include: {
+          role: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return users;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Failed to fetch company users: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Update user role (Owner access)
+   */
+  async updateUserRole(userId: string, newRole: string, ownerUserId: string) {
+    try {
+      // Validate owner access
+      const owner = await this.validateOwnerAccess(ownerUserId);
+
+      // Get the user to update
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { role: true },
+      });
+
+      if (!user || user.tenantId !== owner.tenantId) {
+        throw new Error("User not found or access denied");
+      }
+
+      // Validate new role
+      if (!["manager", "staff"].includes(newRole)) {
+        throw new Error(
+          "Invalid role: Owners can only assign Manager or Staff roles"
+        );
+      }
+
+      // Get the new role
+      const role = await prisma.role.findFirst({
+        where: {
+          tenantId: owner.tenantId,
+          name: newRole,
+        },
+      });
+
+      if (!role) {
+        throw new Error("Role not found");
+      }
+
+      // Update user role
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { roleId: role.id },
+        include: {
+          role: true,
+          tenant: true,
+        },
+      });
+
+      return updatedUser;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Failed to update user role: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Private helper method to validate Owner access
+   */
+  private async validateOwnerAccess(userId: string, companyId?: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: true,
+        tenant: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      throw new Error("User not found or inactive");
+    }
+
+    if (user.role.name !== "owner") {
+      throw new Error("Owner access required");
+    }
+
+    if (companyId && user.tenantId !== companyId) {
+      throw new Error("Access denied: User does not belong to this company");
+    }
+
+    return user;
+  }
+
   async createManagerUser(data: CreateUserInput, creatorUserId: string) {
     // Validate creator permissions (admin or owner)
     const creator = await this.validateCreatorPermissions(creatorUserId, [
