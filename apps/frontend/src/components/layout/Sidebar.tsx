@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   HomeIcon,
   UsersIcon,
@@ -9,16 +9,18 @@ import {
   ChartBarIcon,
   CogIcon,
   ChatBubbleLeftRightIcon,
-} from '@heroicons/react/24/outline';
-import { clsx } from 'clsx';
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
+import { clsx } from "clsx";
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Staff', href: '/staff', icon: UsersIcon },
-  { name: 'Rosters', href: '/rosters', icon: CalendarDaysIcon },
-  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
-  { name: 'AI Assistant', href: '/ai-assistant', icon: ChatBubbleLeftRightIcon },
-  { name: 'Settings', href: '/settings', icon: CogIcon },
+  { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+  { name: "Staff", href: "/staff", icon: UsersIcon },
+  { name: "Rosters", href: "/rosters", icon: CalendarDaysIcon },
+  { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
+  { name: "Store Locations", href: "/store-locations", icon: MapPinIcon },
+  { name: "AI Assistant", href: "/ai-assistant", icon: ChatBubbleLeftRightIcon },
+  { name: "Settings", href: "/settings", icon: CogIcon },
 ];
 
 export default function Sidebar() {
@@ -51,15 +53,17 @@ export default function Sidebar() {
                 href={item.href}
                 className={clsx(
                   isActive
-                    ? 'bg-primary-100 border-primary-500 text-primary-700'
-                    : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                  'group flex items-center px-3 py-2 text-sm font-medium border-l-4 rounded-r-md transition-colors'
+                    ? "bg-primary-100 border-primary-500 text-primary-700"
+                    : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  "group flex items-center px-3 py-2 text-sm font-medium border-l-4 rounded-r-md transition-colors"
                 )}
               >
                 <item.icon
                   className={clsx(
-                    isActive ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-500',
-                    'mr-3 flex-shrink-0 h-6 w-6'
+                    isActive
+                      ? "text-primary-500"
+                      : "text-gray-400 group-hover:text-gray-500",
+                    "mr-3 flex-shrink-0 h-6 w-6"
                   )}
                 />
                 {item.name}

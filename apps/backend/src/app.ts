@@ -13,6 +13,7 @@ import rosterRoutes from "./routes/roster.routes";
 import notificationRoutes from "./routes/notification.routes";
 import exportRoutes from "./routes/export.routes";
 import analyticsRoutes from "./routes/analytics.routes";
+import storeLocationRoutes from "./routes/storeLocation.routes";
 import adminRoutes from "./routes/admin.routes";
 import ownerRoutes from "./routes/owner.routes";
 
@@ -44,6 +45,7 @@ app.use("/api/rosters", rosterRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/locations", storeLocationRoutes);
 
 // New enhanced routes
 app.use("/api/admin", adminRoutes);

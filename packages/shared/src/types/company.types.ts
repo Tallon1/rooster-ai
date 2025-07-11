@@ -1,5 +1,6 @@
 import { BaseEntity } from "./common.types";
 import { User } from "./auth.types";
+import { StoreLocation } from "./storeLocation.types";
 
 export interface Company extends BaseEntity {
   name: string;
@@ -28,14 +29,6 @@ export interface CompanySettings {
   [key: string]: any;
 }
 
-export interface StoreLocation extends BaseEntity {
-  name: string;
-  address: string;
-  isActive: boolean;
-  tenantId: string;
-}
-
-// ✅ Keep these type definitions here:
 export interface CreateCompanyInput {
   name: string;
   domain: string;

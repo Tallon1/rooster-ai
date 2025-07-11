@@ -9,4 +9,5 @@ export * from "./tenant.types";
 export * from "./user.types";
 export * from "./ai.types";
 export * from "./notification.types";
-export * from "./company.types";
+export * from "./storeLocation.types";
+export * from "./company.types"; // Move this after storeLocation.types

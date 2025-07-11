@@ -7,6 +7,7 @@ import { Staff } from "@rooster-ai/shared";
 import Button from "@/components/ui/Button";
 import { useStaffStore } from "@/store/staffStore";
 import { useRouter } from "next/navigation";
+import { useStoreLocationStore } from "@/store/storeLocationStore";
 
 // Create a frontend-specific schema that matches the form requirements
 const staffFormSchema = z.object({
@@ -31,6 +32,7 @@ interface StaffFormProps {
 export default function StaffForm({ staff, onSuccess }: StaffFormProps) {
   const router = useRouter();
   const { createStaff, updateStaff, isLoading } = useStaffStore();
+  const { storeLocations } = useStoreLocationStore();
 
   const {
     register,
@@ -124,6 +126,26 @@ export default function StaffForm({ staff, onSuccess }: StaffFormProps) {
             {...register("phone")}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Assigned Locations
+          </label>
+          <div className="space-y-2">
+            {storeLocations.map((location) => (
+              <label key={location.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  value={location.id}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-900">
+                  {location.name}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div>

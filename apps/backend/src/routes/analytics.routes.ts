@@ -14,31 +14,22 @@ const router: ExpressRouter = Router();
 // Apply authentication to all routes
 router.use(authenticateToken);
 
+// Accessible to admin, owner, manager
+const managementRoles = ["admin", "owner", "manager"];
+
 // Analytics routes
-router.get(
-  "/dashboard",
-  requireRole(["admin", "owner", "manager"]),
-  getDashboardMetrics
-);
+router.get("/dashboard", requireRole(managementRoles), getDashboardMetrics);
 router.get(
   "/staff-utilization",
-  requireRole(["admin", "owner", "manager"]),
+  requireRole(managementRoles),
   getStaffUtilization
 );
 router.get(
   "/departments",
-  requireRole(["admin", "owner", "manager"]),
+  requireRole(managementRoles),
   getDepartmentAnalytics
 );
-router.get(
-  "/trends",
-  requireRole(["admin", "owner", "manager"]),
-  getSchedulingTrends
-);
-router.get(
-  "/costs",
-  requireRole(["admin", "owner", "manager"]),
-  getCostAnalysis
-);
+router.get("/trends", requireRole(managementRoles), getSchedulingTrends);
+router.get("/costs", requireRole(managementRoles), getCostAnalysis);
 
 export default router;

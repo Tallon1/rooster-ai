@@ -9,3 +9,4 @@ export * from "./auth.schema";
 export * from "./staff.schema";
 export * from "./roster.schema";
 export * from "./company.schema";
+export * from "./storeLocation.schema";
