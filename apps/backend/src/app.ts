@@ -16,6 +16,7 @@ import analyticsRoutes from "./routes/analytics.routes";
 import storeLocationRoutes from "./routes/storeLocation.routes";
 import adminRoutes from "./routes/admin.routes";
 import ownerRoutes from "./routes/owner.routes";
+import userManagementRoutes from "./routes/userManagement.routes";
 
 // Load environment variables
 dotenv.config();
@@ -38,7 +39,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Existing routes
+// General routes
 app.use("/api/auth", authRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/rosters", rosterRoutes);
@@ -46,8 +47,9 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/export", exportRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/locations", storeLocationRoutes);
+app.use("/api/users", userManagementRoutes);
 
-// New enhanced routes
+// User routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/owner", ownerRoutes);
 

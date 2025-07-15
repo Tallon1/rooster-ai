@@ -64,12 +64,13 @@ export interface CompanyFilterInput {
   sortOrder?: "asc" | "desc";
 }
 
-export interface CreateUserInput {
-  companyId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phone?: string;
-  role?: string;
-}
+// Removed since it now exists in user.types.ts
+// export interface CreateUserInput {
+//   companyId: string;
+//   firstName: string;
+//   lastName: string;
+//   email: string;
+//   password: string;
+//   phone?: string;
+//   role?: string;
+// }

@@ -19,6 +19,7 @@ export * from "./schemas/staff.schema";
 export * from "./schemas/roster.schema";
 export * from "./schemas/company.schema";
 export * from "./schemas/storeLocation.schema";
+export { createUserSchema, updateUserSchema, userFilterSchema } from "./schemas/user.schema";
 
 export const SHARED_CONSTANTS = {
   APP_NAME: "Rooster AI",

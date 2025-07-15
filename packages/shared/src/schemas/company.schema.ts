@@ -33,15 +33,16 @@ export const companyFilterSchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
 });
 
-export const createUserSchema = z.object({
-  companyId: z.string().cuid("Invalid company ID"),
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  phone: z.string().optional(),
-  role: z.enum(["owner", "manager", "staff"]).optional(),
-});
+// Removed since it now exists in user.types.ts
+// export const createUserSchema = z.object({
+//   companyId: z.string().cuid("Invalid company ID"),
+//   firstName: z.string().min(2, "First name must be at least 2 characters"),
+//   lastName: z.string().min(2, "Last name must be at least 2 characters"),
+//   email: z.string().email("Invalid email format"),
+//   password: z.string().min(8, "Password must be at least 8 characters"),
+//   phone: z.string().optional(),
+//   role: z.enum(["owner", "manager", "staff"]).optional(),
+// });
 
 // ❌ Remove these duplicate type exports:
 // export type CreateCompanyInput = z.infer<typeof createCompanySchema>;

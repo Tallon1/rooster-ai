@@ -10,3 +10,4 @@ export * from "./staff.schema";
 export * from "./roster.schema";
 export * from "./company.schema";
 export * from "./storeLocation.schema";
+export * from "./user.schema";
