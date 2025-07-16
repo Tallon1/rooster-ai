@@ -18,6 +18,11 @@ export class UserManagementService {
       // Validate admin permissions
       await this.validateAdminUser(adminUserId);
 
+      // Ensure companyId is provided and valid
+      if (!data.companyId) {
+        throw new Error("Company ID is required for owner creation");
+      }
+
       // Validate company exists and has capacity
       await this.validateCompanyCapacity(data.companyId, "owner");
 
@@ -60,7 +65,7 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          companyId: data.companyId,
+          companyId: data.companyId, // Now guaranteed to be string
           roleId: ownerRole.id,
           isActive: true,
         },
@@ -92,9 +97,14 @@ export class UserManagementService {
         "owner",
       ]);
 
-      // Determine company ID
-      const companyId =
-        creator.role.name === "admin" ? data.companyId : creator.companyId;
+      // Determine company ID - ensure it's always a string
+      const companyId: string =
+        creator.role.name === "admin"
+          ? data.companyId ||
+            (() => {
+              throw new Error("Company ID is required for admin-created users");
+            })()
+          : creator.companyId;
 
       // Validate company capacity for managers
       await this.validateCompanyCapacity(companyId, "manager");
@@ -122,7 +132,7 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          companyId: companyId,
+          companyId: companyId, // Now guaranteed to be string
           roleId: managerRole.id,
           isActive: true,
         },
@@ -155,9 +165,14 @@ export class UserManagementService {
         "manager",
       ]);
 
-      // Determine company ID
-      const companyId =
-        creator.role.name === "admin" ? data.companyId : creator.companyId;
+      // Determine company ID - ensure it's always a string
+      const companyId: string =
+        creator.role.name === "admin"
+          ? data.companyId ||
+            (() => {
+              throw new Error("Company ID is required for admin-created users");
+            })()
+          : creator.companyId;
 
       // Validate company capacity
       await this.validateCompanyCapacity(companyId, "staff");
@@ -185,7 +200,7 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          companyId: companyId,
+          companyId: companyId, // Now guaranteed to be string
           roleId: staffRole.id,
           isActive: true,
         },
@@ -538,36 +553,41 @@ export class UserManagementService {
         whereClause.companyId = requestor.companyId;
       }
 
+      // Get user stats by company
       const userStats = await prisma.user.groupBy({
         by: ["companyId"],
         where: whereClause,
         _count: {
           id: true,
         },
-        _sum: {
-          id: true,
-        },
       });
 
+      // Get role stats - separate query without include
       const roleStats = await prisma.user.groupBy({
         by: ["roleId"],
         where: whereClause,
         _count: {
           id: true,
         },
-        include: {
-          role: {
-            select: {
-              name: true,
-            },
-          },
-        },
       });
+
+      // Get role names separately
+      const roleIds = roleStats.map((stat) => stat.roleId);
+      const roles = await prisma.role.findMany({
+        where: { id: { in: roleIds } },
+        select: { id: true, name: true },
+      });
+
+      // Map role names to stats
+      const roleStatsWithNames = roleStats.map((stat) => ({
+        ...stat,
+        role: roles.find((r) => r.id === stat.roleId) || { name: "Unknown" },
+      }));
 
       return {
         totalUsers: userStats.reduce((sum, stat) => sum + stat._count.id, 0),
         usersByCompany: userStats,
-        usersByRole: roleStats,
+        usersByRole: roleStatsWithNames,
       };
     } catch (error) {
       const errorMessage =
