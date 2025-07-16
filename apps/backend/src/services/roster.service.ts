@@ -4,7 +4,7 @@ import { CreateRosterInput, UpdateRosterInput, RosterFilterInput } from '@rooste
 const prisma = new PrismaClient();
 
 export class RosterService {
-  async createRoster(data: CreateRosterInput, tenantId: string) {
+  async createRoster(data: CreateRosterInput, companyId: string) {
     // Validate date range
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
@@ -16,7 +16,7 @@ export class RosterService {
     // Check for overlapping rosters
     const overlappingRoster = await prisma.roster.findFirst({
       where: {
-        tenantId,
+        companyId,
         AND: [
           {
             OR: [
@@ -46,7 +46,7 @@ export class RosterService {
         endDate,
         isTemplate: data.isTemplate || false,
         notes: data.notes,
-        tenantId,
+        companyId,
         shifts: {
           create: data.shifts?.map(shift => ({
             staffId: shift.staffId,
@@ -78,11 +78,11 @@ export class RosterService {
     return roster;
   }
 
-  async getRosterById(id: string, tenantId: string) {
+  async getRosterById(id: string, companyId: string) {
     const roster = await prisma.roster.findFirst({
       where: {
         id,
-        tenantId
+        companyId
       },
       include: {
         shifts: {
@@ -112,7 +112,7 @@ export class RosterService {
     return roster;
   }
 
-  async getAllRosters(tenantId: string, filters: Partial<RosterFilterInput> = {}) {
+  async getAllRosters(companyId: string, filters: Partial<RosterFilterInput> = {}) {
     const {
       startDate,
       endDate,
@@ -126,7 +126,7 @@ export class RosterService {
 
     // Build where clause
     const where: any = {
-      tenantId
+      companyId
     };
 
     if (startDate) {
@@ -194,10 +194,10 @@ export class RosterService {
     };
   }
 
-  async updateRoster(id: string, data: UpdateRosterInput, tenantId: string) {
-    // Verify roster exists and belongs to tenant
+  async updateRoster(id: string, data: UpdateRosterInput, companyId: string) {
+    // Verify roster exists and belongs to company
     const existingRoster = await prisma.roster.findFirst({
-      where: { id, tenantId }
+      where: { id, companyId }
     });
 
     if (!existingRoster) {
@@ -238,10 +238,10 @@ export class RosterService {
     return updatedRoster;
   }
 
-  async deleteRoster(id: string, tenantId: string) {
-    // Verify roster exists and belongs to tenant
+  async deleteRoster(id: string, companyId: string) {
+    // Verify roster exists and belongs to company
     const existingRoster = await prisma.roster.findFirst({
-      where: { id, tenantId }
+      where: { id, companyId }
     });
 
     if (!existingRoster) {
@@ -261,10 +261,10 @@ export class RosterService {
     return { message: 'Roster deleted successfully' };
   }
 
-  async publishRoster(id: string, tenantId: string) {
-    // Verify roster exists and belongs to tenant
+  async publishRoster(id: string, companyId: string) {
+    // Verify roster exists and belongs to company
     const roster = await prisma.roster.findFirst({
-      where: { id, tenantId },
+      where: { id, companyId },
       include: {
         shifts: {
           include: {
@@ -311,10 +311,10 @@ export class RosterService {
     return publishedRoster;
   }
 
-  async addShiftToRoster(rosterId: string, shiftData: any, tenantId: string) {
-    // Verify roster exists and belongs to tenant
+  async addShiftToRoster(rosterId: string, shiftData: any, companyId: string) {
+    // Verify roster exists and belongs to company
     const roster = await prisma.roster.findFirst({
-      where: { id: rosterId, tenantId }
+      where: { id: rosterId, companyId }
     });
 
     if (!roster) {
@@ -363,13 +363,13 @@ export class RosterService {
     return shift;
   }
 
-  async updateShift(shiftId: string, shiftData: any, tenantId: string) {
-    // Verify shift exists and belongs to tenant
+  async updateShift(shiftId: string, shiftData: any, companyId: string) {
+    // Verify shift exists and belongs to company
     const existingShift = await prisma.shift.findFirst({
       where: {
         id: shiftId,
         roster: {
-          tenantId
+          companyId
         }
       },
       include: {
@@ -431,13 +431,13 @@ export class RosterService {
     return updatedShift;
   }
 
-  async deleteShift(shiftId: string, tenantId: string) {
-    // Verify shift exists and belongs to tenant
+  async deleteShift(shiftId: string, companyId: string) {
+    // Verify shift exists and belongs to company
     const existingShift = await prisma.shift.findFirst({
       where: {
         id: shiftId,
         roster: {
-          tenantId
+          companyId
         }
       },
       include: {
@@ -461,12 +461,12 @@ export class RosterService {
     return { message: 'Shift deleted successfully' };
   }
 
-  async createRosterFromTemplate(templateId: string, startDate: string, endDate: string, tenantId: string) {
+  async createRosterFromTemplate(templateId: string, startDate: string, endDate: string, companyId: string) {
     // Get template
     const template = await prisma.roster.findFirst({
       where: {
         id: templateId,
-        tenantId,
+        companyId,
         isTemplate: true
       },
       include: {
@@ -488,7 +488,7 @@ export class RosterService {
         name: `${template.name} - ${newStartDate.toLocaleDateString()}`,
         startDate: newStartDate,
         endDate: newEndDate,
-        tenantId,
+        companyId,
         isTemplate: false,
         isPublished: false,
         shifts: {
@@ -603,7 +603,7 @@ export class RosterService {
     // Additional validation rules can be added here
   }
 
-  async getRosterStats(tenantId: string) {
+  async getRosterStats(companyId: string) {
     const [
       totalRosters,
       publishedRosters,
@@ -611,13 +611,13 @@ export class RosterService {
       totalShifts,
       confirmedShifts
     ] = await Promise.all([
-      prisma.roster.count({ where: { tenantId, isTemplate: false } }),
-      prisma.roster.count({ where: { tenantId, isPublished: true, isTemplate: false } }),
-      prisma.roster.count({ where: { tenantId, isTemplate: true } }),
+      prisma.roster.count({ where: { companyId, isTemplate: false } }),
+      prisma.roster.count({ where: { companyId, isPublished: true, isTemplate: false } }),
+      prisma.roster.count({ where: { companyId, isTemplate: true } }),
       prisma.shift.count({
         where: {
           roster: {
-            tenantId,
+            companyId,
             isTemplate: false
           }
         }
@@ -625,7 +625,7 @@ export class RosterService {
       prisma.shift.count({
         where: {
           roster: {
-            tenantId,
+            companyId,
             isTemplate: false
           },
           isConfirmed: true

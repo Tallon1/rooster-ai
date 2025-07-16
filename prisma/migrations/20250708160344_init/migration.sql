@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "tenants" (
+CREATE TABLE "companies" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "domain" TEXT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE "tenants" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "tenants_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "companies_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -23,7 +23,7 @@ CREATE TABLE "users" (
     "preferences" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tenantId" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
     "roleId" TEXT NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
@@ -38,7 +38,7 @@ CREATE TABLE "roles" (
     "isSystem" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tenantId" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 );
@@ -59,7 +59,7 @@ CREATE TABLE "staff" (
     "preferences" JSONB NOT NULL DEFAULT '{}',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tenantId" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
 
     CONSTRAINT "staff_pkey" PRIMARY KEY ("id")
 );
@@ -89,7 +89,7 @@ CREATE TABLE "rosters" (
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "tenantId" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
 
     CONSTRAINT "rosters_pkey" PRIMARY KEY ("id")
 );
@@ -136,41 +136,41 @@ CREATE TABLE "audit_logs" (
     "ipAddress" TEXT,
     "userAgent" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "tenantId" TEXT NOT NULL,
+    "companyId" TEXT NOT NULL,
     "userId" TEXT,
 
     CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "tenants_domain_key" ON "tenants"("domain");
+CREATE UNIQUE INDEX "companies_domain_key" ON "companies"("domain");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "roles_tenantId_name_key" ON "roles"("tenantId", "name");
+CREATE UNIQUE INDEX "roles_companyId_name_key" ON "roles"("companyId", "name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "staff_tenantId_email_key" ON "staff"("tenantId", "email");
+CREATE UNIQUE INDEX "staff_companyId_email_key" ON "staff"("companyId", "email");
 
 -- AddForeignKey
-ALTER TABLE "users" ADD CONSTRAINT "users_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "users" ADD CONSTRAINT "users_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "roles" ADD CONSTRAINT "roles_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "roles" ADD CONSTRAINT "roles_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "staff" ADD CONSTRAINT "staff_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "staff" ADD CONSTRAINT "staff_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "staff_availability" ADD CONSTRAINT "staff_availability_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "staff"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "rosters" ADD CONSTRAINT "rosters_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "rosters" ADD CONSTRAINT "rosters_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "shifts" ADD CONSTRAINT "shifts_rosterId_fkey" FOREIGN KEY ("rosterId") REFERENCES "rosters"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -182,7 +182,7 @@ ALTER TABLE "shifts" ADD CONSTRAINT "shifts_staffId_fkey" FOREIGN KEY ("staffId"
 ALTER TABLE "notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "audit_logs" ADD CONSTRAINT "audit_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;

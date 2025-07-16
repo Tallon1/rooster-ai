@@ -13,7 +13,7 @@ export class TokenManagementService {
 
     // Get token usage across all companies
     const tokenStats = await prisma.tokenUsage.groupBy({
-      by: ["tenantId"],
+      by: ["companyId"],
       where: {
         month: targetMonth,
         year: targetYear,
@@ -28,10 +28,10 @@ export class TokenManagementService {
     });
 
     // Get company details
-    const companies = await prisma.tenant.findMany({
+    const companies = await prisma.company.findMany({
       where: {
         id: {
-          in: tokenStats.map((stat) => stat.tenantId),
+          in: tokenStats.map((stat) => stat.companyId),
         },
       },
       select: {
@@ -43,14 +43,14 @@ export class TokenManagementService {
 
     // Combine data
     const result = tokenStats.map((stat) => {
-      const company = companies.find((c) => c.id === stat.tenantId);
+      const company = companies.find((c) => c.id === stat.companyId);
 
       // Handle null values properly
       const tokensUsed = stat._sum.tokensUsed || 0;
       const cost = stat._sum.cost ? stat._sum.cost.toNumber() : 0;
 
       return {
-        companyId: stat.tenantId,
+        companyId: stat.companyId,
         companyName: company?.name || "Unknown",
         tokenLimit: company?.tokenLimit || 0,
         tokensUsed,
@@ -88,7 +88,7 @@ export class TokenManagementService {
     // Get company token usage
     const usage = await prisma.tokenUsage.findMany({
       where: {
-        tenantId: companyId,
+        companyId: companyId,
         month: targetMonth,
         year: targetYear,
       },
@@ -112,7 +112,7 @@ export class TokenManagementService {
     });
 
     // Get company details
-    const company = await prisma.tenant.findUnique({
+    const company = await prisma.company.findUnique({
       where: { id: companyId },
       select: {
         id: true,
@@ -157,7 +157,7 @@ export class TokenManagementService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 

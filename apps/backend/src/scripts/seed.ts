@@ -9,7 +9,7 @@ async function main() {
 
   // 1. Create Rooster AI Company (Admin Company)
   console.log("📊 Creating Rooster AI admin company...");
-  const roosterAICompany = await prisma.tenant.upsert({
+  const roosterAICompany = await prisma.company.upsert({
     where: { domain: "roosterai.ie" },
     update: {},
     create: {
@@ -32,7 +32,7 @@ async function main() {
 
   // 2. Create Demo Restaurant Company
   console.log("🏪 Creating demo restaurant company...");
-  const demoCompany = await prisma.tenant.upsert({
+  const demoCompany = await prisma.company.upsert({
     where: { domain: "demo.rooster-ai.com" },
     update: {},
     create: {
@@ -56,8 +56,8 @@ async function main() {
   console.log("👑 Creating admin roles...");
   const adminRole = await prisma.role.upsert({
     where: {
-      tenantId_name: {
-        tenantId: roosterAICompany.id,
+      companyId_name: {
+        companyId: roosterAICompany.id,
         name: "admin",
       },
     },
@@ -81,7 +81,7 @@ async function main() {
         "reports:all",
       ],
       isSystem: true,
-      tenantId: roosterAICompany.id,
+      companyId: roosterAICompany.id,
     },
   });
 
@@ -89,8 +89,8 @@ async function main() {
   console.log("🎭 Creating standard roles...");
   const ownerRole = await prisma.role.upsert({
     where: {
-      tenantId_name: {
-        tenantId: demoCompany.id,
+      companyId_name: {
+        companyId: demoCompany.id,
         name: "owner",
       },
     },
@@ -111,14 +111,14 @@ async function main() {
         "token:view",
       ],
       isSystem: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   });
 
   const managerRole = await prisma.role.upsert({
     where: {
-      tenantId_name: {
-        tenantId: demoCompany.id,
+      companyId_name: {
+        companyId: demoCompany.id,
         name: "manager",
       },
     },
@@ -139,14 +139,14 @@ async function main() {
         "reports:basic",
       ],
       isSystem: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   });
 
   const staffRole = await prisma.role.upsert({
     where: {
-      tenantId_name: {
-        tenantId: demoCompany.id,
+      companyId_name: {
+        companyId: demoCompany.id,
         name: "staff",
       },
     },
@@ -156,7 +156,7 @@ async function main() {
       description: "Staff member with limited access to personal schedules",
       permissions: ["roster:read", "profile:update", "requests:create"],
       isSystem: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   });
 
@@ -171,7 +171,7 @@ async function main() {
       name: "Karl Tallon",
       passwordHash: karlPasswordHash,
       phone: "+353 1 234 5678",
-      tenantId: roosterAICompany.id,
+      companyId: roosterAICompany.id,
       roleId: adminRole.id,
       isActive: true,
     },
@@ -186,7 +186,7 @@ async function main() {
       name: "Olivia Hone",
       passwordHash: oliviaPasswordHash,
       phone: "+353 1 234 5679",
-      tenantId: roosterAICompany.id,
+      companyId: roosterAICompany.id,
       roleId: adminRole.id,
       isActive: true,
     },
@@ -198,7 +198,7 @@ async function main() {
     data: {
       name: "Main Street Location",
       address: "123 Main Street, Dublin, Ireland",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       isActive: true,
     },
   });
@@ -207,7 +207,7 @@ async function main() {
     data: {
       name: "Temple Bar Location",
       address: "456 Temple Bar, Dublin, Ireland",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       isActive: true,
     },
   });
@@ -223,7 +223,7 @@ async function main() {
       name: "Demo Owner",
       passwordHash: ownerPasswordHash,
       phone: "+353 1 555 0001",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       roleId: ownerRole.id,
       isActive: true,
     },
@@ -237,7 +237,7 @@ async function main() {
       name: "Demo Manager",
       passwordHash: managerPasswordHash,
       phone: "+353 1 555 0002",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       roleId: managerRole.id,
       isActive: true,
     },
@@ -267,7 +267,7 @@ async function main() {
       shiftPreferences: ["Midday Shifts", "Late Shifts"],
       contractType: "Full-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
     {
       name: "Jane Doe",
@@ -287,7 +287,7 @@ async function main() {
       shiftPreferences: ["Late Shifts"],
       contractType: "Full-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
     {
       name: "Mike Johnson",
@@ -301,7 +301,7 @@ async function main() {
       shiftPreferences: ["Early Shifts", "Midday Shifts"],
       contractType: "Part-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
     {
       name: "Sarah Wilson",
@@ -315,7 +315,7 @@ async function main() {
       shiftPreferences: ["Early Shifts", "Midday Shifts"],
       contractType: "Part-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
     {
       name: "David Brown",
@@ -335,7 +335,7 @@ async function main() {
       shiftPreferences: ["Midday Shifts", "Late Shifts"],
       contractType: "Full-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
     {
       name: "Emma Kelly",
@@ -355,15 +355,15 @@ async function main() {
       shiftPreferences: ["Early Shifts", "Midday Shifts"],
       contractType: "Part-time",
       isActive: true,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   ];
 
   for (const staffData of staffMembers) {
     const staff = await prisma.staff.upsert({
       where: {
-        tenantId_email: {
-          tenantId: staffData.tenantId,
+        companyId_email: {
+          companyId: staffData.companyId,
           email: staffData.email,
         },
       },
@@ -401,7 +401,7 @@ async function main() {
         name: staff.name,
         passwordHash: staffPasswordHash,
         phone: staff.phone,
-        tenantId: demoCompany.id,
+        companyId: demoCompany.id,
         roleId: staffRole.id,
         isActive: true,
       },
@@ -414,7 +414,7 @@ async function main() {
     data: {
       name: "Weekly Rosters",
       color: "#3B82F6",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   });
 
@@ -422,7 +422,7 @@ async function main() {
     data: {
       name: "Special Events",
       color: "#EF4444",
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
     },
   });
 
@@ -453,7 +453,7 @@ async function main() {
       isPublished: weekOffset < 0, // Past rosters are published, current might be draft
       isTemplate: false,
       folderId: weeklyFolder.id,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       notes: `Automatically generated roster for week starting ${weekStart.toLocaleDateString()}`,
     });
   }
@@ -618,7 +618,7 @@ async function main() {
       isPublished: false,
       isTemplate: true,
       folderId: weeklyFolder.id,
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       notes: "Standard weekly roster template for regular operations",
     },
   });
@@ -692,7 +692,7 @@ async function main() {
 
   await prisma.tokenUsage.create({
     data: {
-      tenantId: demoCompany.id,
+      companyId: demoCompany.id,
       userId: managerUser.id,
       month: currentMonth,
       year: currentYear,

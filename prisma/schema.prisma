@@ -14,7 +14,7 @@ datasource db {
 }
 
 // Enhanced Tenant/Company model with new limits
-model Tenant {
+model Company {
   id            String   @id @default(cuid())
   name          String
   domain        String   @unique
@@ -41,7 +41,7 @@ model Tenant {
   tokenUsage    TokenUsage[]
   rosterFolders RosterFolder[]
 
-  @@map("tenants")
+  @@map("companies")
 }
 
 // New StoreLocation entity for multi-location support
@@ -54,8 +54,8 @@ model StoreLocation {
   updatedAt DateTime @updatedAt
 
   // Company relationship
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Relations
   staffAssignments StaffStoreLocation[]
@@ -96,9 +96,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  // Multi-tenant relationship
-  tenantId     String
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Multi-company relationship
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Role relationship
   roleId       String
@@ -122,14 +122,14 @@ model Role {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Multi-tenant relationship
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Multi-company relationship
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Relations
   users       User[]
 
-  @@unique([tenantId, name])
+  @@unique([companyId, name])
   @@map("roles")
 }
 
@@ -156,16 +156,16 @@ model Staff {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  // Multi-tenant relationship
-  tenantId     String
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Multi-company relationship
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Relations
   shifts              Shift[]
   availability        StaffAvailability[]
   storeAssignments    StaffStoreLocation[]
 
-  @@unique([tenantId, email])
+  @@unique([companyId, email])
   @@map("staff")
 }
 
@@ -203,9 +203,9 @@ model Roster {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Multi-tenant relationship
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Multi-company relationship
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Relations
   shifts      Shift[]
@@ -222,9 +222,9 @@ model RosterFolder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Multi-tenant relationship
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Multi-company relationship
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   // Relations
   rosters   Roster[]
@@ -264,13 +264,13 @@ model TokenUsage {
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([tenantId, userId, month, year])
+  @@unique([companyId, userId, month, year])
   @@map("token_usage")
 }
 
@@ -304,8 +304,8 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   // Relationships
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)

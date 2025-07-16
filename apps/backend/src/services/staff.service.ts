@@ -4,12 +4,12 @@ import { CreateStaffInput, UpdateStaffInput, StaffFilterInput } from '@rooster-a
 const prisma = new PrismaClient();
 
 export class StaffService {
-  async createStaff(data: CreateStaffInput, tenantId: string) {
-    // Check if staff member already exists with same email in tenant
+  async createStaff(data: CreateStaffInput, companyId: string) {
+    // Check if staff member already exists with same email in company
     const existingStaff = await prisma.staff.findUnique({
       where: {
-        tenantId_email: {
-          tenantId,
+        companyId_email: {
+          companyId,
           email: data.email
         }
       }
@@ -23,7 +23,7 @@ export class StaffService {
     const staff = await prisma.staff.create({
       data: {
         ...data,
-        tenantId,
+        companyId,
         startDate: new Date(data.startDate),
         ...(data.endDate && { endDate: new Date(data.endDate) })
       },
@@ -35,11 +35,11 @@ export class StaffService {
     return staff;
   }
 
-  async getStaffById(id: string, tenantId: string) {
+  async getStaffById(id: string, companyId: string) {
     const staff = await prisma.staff.findFirst({
       where: {
         id,
-        tenantId
+        companyId
       },
       include: {
         availability: true,
@@ -62,7 +62,7 @@ export class StaffService {
     return staff;
   }
 
-  async getAllStaff(tenantId: string, filters: Partial<StaffFilterInput> = {}) {
+  async getAllStaff(companyId: string, filters: Partial<StaffFilterInput> = {}) {
     const {
       department,
       position,
@@ -76,7 +76,7 @@ export class StaffService {
 
     // Build where clause
     const where: any = {
-      tenantId
+      companyId
     };
 
     if (department) {
@@ -134,10 +134,10 @@ export class StaffService {
     };
   }
 
-  async updateStaff(id: string, data: UpdateStaffInput, tenantId: string) {
-    // Verify staff exists and belongs to tenant
+  async updateStaff(id: string, data: UpdateStaffInput, companyId: string) {
+    // Verify staff exists and belongs to company
     const existingStaff = await prisma.staff.findFirst({
-      where: { id, tenantId }
+      where: { id, companyId }
     });
 
     if (!existingStaff) {
@@ -148,8 +148,8 @@ export class StaffService {
     if (data.email && data.email !== existingStaff.email) {
       const emailExists = await prisma.staff.findUnique({
         where: {
-          tenantId_email: {
-            tenantId,
+          companyId_email: {
+            companyId,
             email: data.email
           }
         }
@@ -176,10 +176,10 @@ export class StaffService {
     return updatedStaff;
   }
 
-  async deleteStaff(id: string, tenantId: string) {
-    // Verify staff exists and belongs to tenant
+  async deleteStaff(id: string, companyId: string) {
+    // Verify staff exists and belongs to company
     const existingStaff = await prisma.staff.findFirst({
-      where: { id, tenantId }
+      where: { id, companyId }
     });
 
     if (!existingStaff) {
@@ -209,23 +209,23 @@ export class StaffService {
     return deletedStaff;
   }
 
-  async getStaffStats(tenantId: string) {
+  async getStaffStats(companyId: string) {
     const [
       totalStaff,
       activeStaff,
       departments,
       positions
     ] = await Promise.all([
-      prisma.staff.count({ where: { tenantId } }),
-      prisma.staff.count({ where: { tenantId, isActive: true } }),
+      prisma.staff.count({ where: { companyId } }),
+      prisma.staff.count({ where: { companyId, isActive: true } }),
       prisma.staff.groupBy({
         by: ['department'],
-        where: { tenantId, isActive: true },
+        where: { companyId, isActive: true },
         _count: true
       }),
       prisma.staff.groupBy({
         by: ['position'],
-        where: { tenantId, isActive: true },
+        where: { companyId, isActive: true },
         _count: true
       })
     ]);
@@ -244,10 +244,10 @@ export class StaffService {
     };
   }
 
-  async updateStaffAvailability(staffId: string, availability: any[], tenantId: string) {
-    // Verify staff exists and belongs to tenant
+  async updateStaffAvailability(staffId: string, availability: any[], companyId: string) {
+    // Verify staff exists and belongs to company
     const staff = await prisma.staff.findFirst({
-      where: { id: staffId, tenantId }
+      where: { id: staffId, companyId }
     });
 
     if (!staff) {
@@ -273,6 +273,6 @@ export class StaffService {
     }
 
     // Return updated staff with availability
-    return this.getStaffById(staffId, tenantId);
+    return this.getStaffById(staffId, companyId);
   }
 }

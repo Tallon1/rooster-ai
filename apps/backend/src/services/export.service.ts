@@ -8,9 +8,9 @@ const prisma = new PrismaClient();
 export class ExportService {
   async exportRosterToExcel(
     rosterId: string,
-    tenantId: string
+    companyId: string
   ): Promise<Buffer> {
-    const roster = await this.getRosterWithDetails(rosterId, tenantId);
+    const roster = await this.getRosterWithDetails(rosterId, companyId);
 
     // Create workbook
     const workbook = XLSX.utils.book_new();
@@ -75,8 +75,8 @@ export class ExportService {
     return buffer;
   }
 
-  async exportRosterToPDF(rosterId: string, tenantId: string): Promise<Buffer> {
-    const roster = await this.getRosterWithDetails(rosterId, tenantId);
+  async exportRosterToPDF(rosterId: string, companyId: string): Promise<Buffer> {
+    const roster = await this.getRosterWithDetails(rosterId, companyId);
 
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
@@ -166,8 +166,8 @@ export class ExportService {
     });
   }
 
-  async exportRosterToCSV(rosterId: string, tenantId: string): Promise<string> {
-    const roster = await this.getRosterWithDetails(rosterId, tenantId);
+  async exportRosterToCSV(rosterId: string, companyId: string): Promise<string> {
+    const roster = await this.getRosterWithDetails(rosterId, companyId);
 
     const csvRows = [
       "Staff Name,Position,Department,Date,Start Time,End Time,Hours,Notes",
@@ -194,9 +194,9 @@ export class ExportService {
     return csvRows.join("\n");
   }
 
-  async exportStaffListToExcel(tenantId: string): Promise<Buffer> {
+  async exportStaffListToExcel(companyId: string): Promise<Buffer> {
     const staff = await prisma.staff.findMany({
-      where: { tenantId, isActive: true },
+      where: { companyId, isActive: true },
       include: {
         availability: true,
         _count: {
@@ -256,9 +256,9 @@ export class ExportService {
     return buffer;
   }
 
-  private async getRosterWithDetails(rosterId: string, tenantId: string) {
+  private async getRosterWithDetails(rosterId: string, companyId: string) {
     const roster = await prisma.roster.findFirst({
-      where: { id: rosterId, tenantId },
+      where: { id: rosterId, companyId },
       include: {
         shifts: {
           include: {

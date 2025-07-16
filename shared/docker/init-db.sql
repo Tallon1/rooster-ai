@@ -39,13 +39,13 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'staff',
-    tenant_id UUID NOT NULL,
+    company_id UUID NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS tenants (
+CREATE TABLE IF NOT EXISTS companies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     domain VARCHAR(255) UNIQUE NOT NULL,

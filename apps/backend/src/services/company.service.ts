@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma, Company } from "@prisma/client";
 import {
   CreateCompanyInput,
   UpdateCompanyInput,
@@ -20,7 +20,7 @@ export class CompanyService {
       const adminUser = await this.validateAdminUser(adminUserId);
 
       // Check if company domain already exists
-      const existingCompany = await prisma.tenant.findUnique({
+      const existingCompany = await prisma.company.findUnique({
         where: { domain: data.domain },
       });
 
@@ -29,7 +29,7 @@ export class CompanyService {
       }
 
       // Create company with default settings
-      const company = await prisma.tenant.create({
+      const company = await prisma.company.create({
         data: {
           name: data.name,
           domain: data.domain,
@@ -128,10 +128,10 @@ export class CompanyService {
       const skip = (page - 1) * limit;
 
       // Get total count for pagination
-      const total = await prisma.tenant.count({ where });
+      const total = await prisma.company.count({ where });
 
       // Get companies with comprehensive data
-      const companies = await prisma.tenant.findMany({
+      const companies = await prisma.company.findMany({
         where,
         include: {
           storeLocations: true,
@@ -188,7 +188,7 @@ export class CompanyService {
       const owner = await this.validateOwnerAccess(ownerUserId, companyId);
 
       // Get comprehensive company data
-      const company = await prisma.tenant.findUnique({
+      const company = await prisma.company.findUnique({
         where: { id: companyId },
         include: {
           storeLocations: {
@@ -255,7 +255,7 @@ export class CompanyService {
         await Promise.all([
           prisma.roster.count({
             where: {
-              tenantId: companyId,
+              companyId: companyId,
               isPublished: true,
               createdAt: {
                 gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -265,7 +265,7 @@ export class CompanyService {
           prisma.shift.count({
             where: {
               roster: {
-                tenantId: companyId,
+                companyId: companyId,
               },
               startTime: {
                 gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -275,7 +275,7 @@ export class CompanyService {
           prisma.shift.count({
             where: {
               roster: {
-                tenantId: companyId,
+                companyId: companyId,
               },
               startTime: {
                 gte: currentDate,
@@ -284,7 +284,7 @@ export class CompanyService {
           }),
           prisma.tokenUsage.aggregate({
             where: {
-              tenantId: companyId,
+              companyId: companyId,
               month: currentMonth,
               year: currentYear,
             },
@@ -400,7 +400,7 @@ export class CompanyService {
       const owner = await this.validateOwnerAccess(ownerUserId, companyId);
 
       // Get existing company
-      const existingCompany = await prisma.tenant.findUnique({
+      const existingCompany = await prisma.company.findUnique({
         where: { id: companyId },
       });
 
@@ -419,7 +419,7 @@ export class CompanyService {
       };
 
       // Update company settings
-      const updatedCompany = await prisma.tenant.update({
+      const updatedCompany = await prisma.company.update({
         where: { id: companyId },
         data: {
           settings: updatedSettings as Prisma.InputJsonValue,
@@ -466,7 +466,7 @@ export class CompanyService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -478,7 +478,7 @@ export class CompanyService {
       throw new Error("Owner access required");
     }
 
-    if (companyId && user.tenantId !== companyId) {
+    if (companyId && user.companyId !== companyId) {
       throw new Error("Access denied: User does not belong to this company");
     }
 
@@ -494,7 +494,7 @@ export class CompanyService {
       // Validate admin access
       await this.validateAdminUser(adminUserId);
 
-      const company = await prisma.tenant.findUnique({
+      const company = await prisma.company.findUnique({
         where: { id: companyId },
         include: {
           storeLocations: true,
@@ -561,7 +561,7 @@ export class CompanyService {
       await this.validateAdminUser(adminUserId);
 
       // Get existing company for audit logging
-      const existingCompany = await prisma.tenant.findUnique({
+      const existingCompany = await prisma.company.findUnique({
         where: { id: companyId },
       });
 
@@ -571,7 +571,7 @@ export class CompanyService {
 
       // Check domain uniqueness if domain is being updated
       if (data.domain && data.domain !== existingCompany.domain) {
-        const domainExists = await prisma.tenant.findUnique({
+        const domainExists = await prisma.company.findUnique({
           where: { domain: data.domain },
         });
 
@@ -592,7 +592,7 @@ export class CompanyService {
       }
 
       // Update company with proper data object construction
-      const updateData: Prisma.TenantUpdateInput = {};
+      const updateData: Prisma.CompanyUpdateInput = {};
 
       if (data.name) updateData.name = data.name;
       if (data.domain) updateData.domain = data.domain;
@@ -605,7 +605,7 @@ export class CompanyService {
         updateData.isActive = data.isActive;
       if (updatedSettings) updateData.settings = updatedSettings;
 
-      const updatedCompany = await prisma.tenant.update({
+      const updatedCompany = await prisma.company.update({
         where: { id: companyId },
         data: updateData,
         include: {
@@ -655,7 +655,7 @@ export class CompanyService {
       // Validate admin access
       await this.validateAdminUser(adminUserId);
 
-      const existingCompany = await prisma.tenant.findUnique({
+      const existingCompany = await prisma.company.findUnique({
         where: { id: companyId },
         include: {
           users: {
@@ -673,7 +673,7 @@ export class CompanyService {
       }
 
       // Update company status
-      const updatedCompany = await prisma.tenant.update({
+      const updatedCompany = await prisma.company.update({
         where: { id: companyId },
         data: { isActive: !suspend },
       });
@@ -720,7 +720,7 @@ export class CompanyService {
         throw new Error("Token limit must be a positive number");
       }
 
-      const updatedCompany = await prisma.tenant.update({
+      const updatedCompany = await prisma.company.update({
         where: { id: companyId },
         data: { tokenLimit },
       });
@@ -758,8 +758,8 @@ export class CompanyService {
         totalRosters,
         monthlyTokenUsage,
       ] = await Promise.all([
-        prisma.tenant.count(),
-        prisma.tenant.count({ where: { isActive: true } }),
+        prisma.company.count(),
+        prisma.company.count({ where: { isActive: true } }),
         prisma.user.count(),
         prisma.staff.count({ where: { isActive: true } }),
         prisma.roster.count(),
@@ -808,7 +808,7 @@ export class CompanyService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -821,14 +821,14 @@ export class CompanyService {
     }
 
     // Verify user belongs to Rooster AI company
-    if (user.tenant.domain !== "roosterai.ie") {
+    if (user.company.domain !== "roosterai.ie") {
       throw new Error("Invalid admin user: Must belong to Rooster AI company");
     }
 
     return user;
   }
 
-  private async createDefaultRoles(tenantId: string) {
+  private async createDefaultRoles(companyId: string) {
     const defaultRoles = [
       {
         name: "owner",
@@ -846,7 +846,7 @@ export class CompanyService {
           "token:view",
         ],
         isSystem: true,
-        tenantId,
+        companyId,
       },
       {
         name: "manager",
@@ -864,14 +864,14 @@ export class CompanyService {
           "reports:basic",
         ],
         isSystem: true,
-        tenantId,
+        companyId,
       },
       {
         name: "staff",
         description: "Staff member with limited access to personal schedules",
         permissions: ["roster:read", "profile:update", "requests:create"],
         isSystem: true,
-        tenantId,
+        companyId,
       },
     ];
 
@@ -881,11 +881,11 @@ export class CompanyService {
     });
   }
 
-  private async createStoreLocations(tenantId: string, locations: string[]) {
+  private async createStoreLocations(companyId: string, locations: string[]) {
     const storeLocationData = locations.map((location) => ({
       name: location,
       address: location, // For now, use name as address
-      tenantId,
+      companyId,
       isActive: true,
     }));
 
@@ -909,7 +909,7 @@ export class CompanyService {
         oldData: oldData || {},
         newData: newData || {},
         userId,
-        tenantId: companyId,
+        companyId: companyId,
         ipAddress: null, // Will be set by controller
         userAgent: null, // Will be set by controller
       },

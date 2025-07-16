@@ -1,4 +1,3 @@
-// apps/backend/src/controllers/owner.controller.ts
 import { Request, Response } from "express";
 import { UserManagementService } from "../services/userManagement.service";
 import { CompanyService } from "../services/company.service";
@@ -70,7 +69,7 @@ export const createStaffUser = async (req: Request, res: Response) => {
 export const getCompanyUsers = async (req: Request, res: Response) => {
   try {
     const ownerUserId = req.user!.id;
-    const companyId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
     const users = await userManagementService.getCompanyUsers(
       companyId,
@@ -128,7 +127,7 @@ export const updateUserRole = async (req: Request, res: Response) => {
 
 export const getCompanyOverview = async (req: Request, res: Response) => {
   try {
-    const companyId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const ownerUserId = req.user!.id;
 
     const overview = await companyService.getCompanyOverview(
@@ -157,7 +156,7 @@ export const getCompanyOverview = async (req: Request, res: Response) => {
 
 export const updateCompanySettings = async (req: Request, res: Response) => {
   try {
-    const companyId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const ownerUserId = req.user!.id;
     const settings = req.body;
 

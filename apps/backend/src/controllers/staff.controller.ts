@@ -8,9 +8,9 @@ const staffService = new StaffService();
 export const createStaff = async (req: Request, res: Response) => {
   try {
     const validatedData = createStaffSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const staff = await staffService.createStaff(validatedData, tenantId);
+    const staff = await staffService.createStaff(validatedData, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -32,9 +32,9 @@ export const createStaff = async (req: Request, res: Response) => {
 export const getStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const staff = await staffService.getStaffById(id, tenantId);
+    const staff = await staffService.getStaffById(id, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -55,9 +55,9 @@ export const getStaff = async (req: Request, res: Response) => {
 export const getAllStaff = async (req: Request, res: Response) => {
   try {
     const filters = staffFilterSchema.parse(req.query);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const result = await staffService.getAllStaff(tenantId, filters);
+    const result = await staffService.getAllStaff(companyId, filters);
 
     const response: ApiResponse = {
       success: true,
@@ -80,9 +80,9 @@ export const updateStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const validatedData = updateStaffSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const staff = await staffService.updateStaff(id, validatedData, tenantId);
+    const staff = await staffService.updateStaff(id, validatedData, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -104,9 +104,9 @@ export const updateStaff = async (req: Request, res: Response) => {
 export const deleteStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    await staffService.deleteStaff(id, tenantId);
+    await staffService.deleteStaff(id, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -126,9 +126,9 @@ export const deleteStaff = async (req: Request, res: Response) => {
 
 export const getStaffStats = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const stats = await staffService.getStaffStats(tenantId);
+    const stats = await staffService.getStaffStats(companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -150,9 +150,9 @@ export const updateStaffAvailability = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { availability } = req.body;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const staff = await staffService.updateStaffAvailability(id, availability, tenantId);
+    const staff = await staffService.updateStaffAvailability(id, availability, companyId);
 
     const response: ApiResponse = {
       success: true,

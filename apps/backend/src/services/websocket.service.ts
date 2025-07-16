@@ -29,7 +29,7 @@ export class WebSocketService {
 
         const payload = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
         socket.data.userId = payload.userId;
-        socket.data.tenantId = payload.tenantId;
+        socket.data.companyId = payload.companyId;
         socket.data.role = payload.role;
         
         next();
@@ -42,9 +42,9 @@ export class WebSocketService {
   private setupEventHandlers() {
     this.io.on('connection', (socket) => {
       const userId = socket.data.userId;
-      const tenantId = socket.data.tenantId;
+      const companyId = socket.data.companyId;
 
-      console.log(`User ${userId} connected to tenant ${tenantId}`);
+      console.log(`User ${userId} connected to company ${companyId}`);
 
       // Track user socket connections
       if (!this.userSockets.has(userId)) {
@@ -52,8 +52,8 @@ export class WebSocketService {
       }
       this.userSockets.get(userId)!.push(socket.id);
 
-      // Join tenant room for tenant-wide broadcasts
-      socket.join(`tenant:${tenantId}`);
+      // Join company room for company-wide broadcasts
+      socket.join(`company:${companyId}`);
 
       // Join user-specific room for personal notifications
       socket.join(`user:${userId}`);
@@ -92,9 +92,9 @@ export class WebSocketService {
     this.io.to(`user:${userId}`).emit(event, data);
   }
 
-  // Send update to all users in a tenant
-  sendToTenant(tenantId: string, event: string, data: any) {
-    this.io.to(`tenant:${tenantId}`).emit(event, data);
+  // Send update to all users in a company
+  sendToCompany(companyId: string, event: string, data: any) {
+    this.io.to(`company:${companyId}`).emit(event, data);
   }
 
   // Send update to all users subscribed to a roster

@@ -8,7 +8,7 @@ export const exportRoster = async (req: Request, res: Response): Promise<void> =
   try {
     const { id } = req.params;
     const { format } = req.query;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
     let buffer: Buffer | string;
     let contentType: string;
@@ -16,17 +16,17 @@ export const exportRoster = async (req: Request, res: Response): Promise<void> =
 
     switch (format) {
       case 'excel':
-        buffer = await exportService.exportRosterToExcel(id, tenantId);
+        buffer = await exportService.exportRosterToExcel(id, companyId);
         contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         filename = `roster-${id}.xlsx`;
         break;
       case 'pdf':
-        buffer = await exportService.exportRosterToPDF(id, tenantId);
+        buffer = await exportService.exportRosterToPDF(id, companyId);
         contentType = 'application/pdf';
         filename = `roster-${id}.pdf`;
         break;
       case 'csv':
-        buffer = await exportService.exportRosterToCSV(id, tenantId);
+        buffer = await exportService.exportRosterToCSV(id, companyId);
         contentType = 'text/csv';
         filename = `roster-${id}.csv`;
         break;
@@ -54,9 +54,9 @@ export const exportRoster = async (req: Request, res: Response): Promise<void> =
 
 export const exportStaffList = async (req: Request, res: Response): Promise<void> => {
   try {
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const buffer = await exportService.exportStaffListToExcel(tenantId);
+    const buffer = await exportService.exportStaffListToExcel(companyId);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="staff-list.xlsx"');

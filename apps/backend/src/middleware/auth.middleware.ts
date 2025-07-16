@@ -13,7 +13,7 @@ declare global {
         id: string;
         email: string;
         role: string;
-        tenantId: string;
+        companyId: string;
         companyName: string;
         permissions: string[];
       };
@@ -45,7 +45,7 @@ export const authenticateToken = async (
       where: { id: payload.userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -58,7 +58,7 @@ export const authenticateToken = async (
       return;
     }
 
-    if (user.role.name !== "admin" && !user.tenant.isActive) {
+    if (user.role.name !== "admin" && !user.company.isActive) {
       const response: ApiResponse = {
         success: false,
         error: "Company account is suspended. Please contact support.",
@@ -85,8 +85,8 @@ export const authenticateToken = async (
       id: user.id,
       email: user.email,
       role: user.role.name,
-      tenantId: user.tenantId,
-      companyName: user.tenant.name,
+      companyId: user.companyId,
+      companyName: user.company.name,
       permissions,
     };
 

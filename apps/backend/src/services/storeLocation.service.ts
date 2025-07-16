@@ -15,12 +15,12 @@ export class StoreLocationService {
    */
   async createStoreLocation(
     data: CreateStoreLocationInput,
-    tenantId: string,
+    companyId: string,
     userId: string
   ) {
     try {
       // Validate user has permission to create locations
-      await this.validateUserAccess(userId, tenantId, [
+      await this.validateUserAccess(userId, companyId, [
         "admin",
         "owner",
         "manager",
@@ -31,7 +31,7 @@ export class StoreLocationService {
           name: data.name,
           address: data.address,
           isActive: data.isActive ?? true,
-          tenantId,
+          companyId,
         },
         include: {
           _count: {
@@ -62,14 +62,14 @@ export class StoreLocationService {
   /**
    * Get store location by ID
    */
-  async getStoreLocationById(id: string, tenantId: string, userId: string) {
+  async getStoreLocationById(id: string, companyId: string, userId: string) {
     try {
-      await this.validateUserAccess(userId, tenantId);
+      await this.validateUserAccess(userId, companyId);
 
       const location = await prisma.storeLocation.findFirst({
         where: {
           id,
-          tenantId,
+          companyId,
         },
         include: {
           staffAssignments: {
@@ -110,12 +110,12 @@ export class StoreLocationService {
    * Get all store locations for a company
    */
   async getAllStoreLocations(
-    tenantId: string,
+    companyId: string,
     userId: string,
     filters: Partial<StoreLocationFilterInput> = {}
   ): Promise<PaginatedResponse> {
     try {
-      await this.validateUserAccess(userId, tenantId);
+      await this.validateUserAccess(userId, companyId);
 
       const {
         search,
@@ -127,7 +127,7 @@ export class StoreLocationService {
       } = filters;
 
       // Build where clause
-      const where: any = { tenantId };
+      const where: any = { companyId };
 
       if (search) {
         where.OR = [
@@ -196,11 +196,11 @@ export class StoreLocationService {
   async updateStoreLocation(
     id: string,
     data: UpdateStoreLocationInput,
-    tenantId: string,
+    companyId: string,
     userId: string
   ) {
     try {
-      await this.validateUserAccess(userId, tenantId, [
+      await this.validateUserAccess(userId, companyId, [
         "admin",
         "owner",
         "manager",
@@ -208,7 +208,7 @@ export class StoreLocationService {
 
       // Get existing location for audit
       const existingLocation = await prisma.storeLocation.findFirst({
-        where: { id, tenantId },
+        where: { id, companyId },
       });
 
       if (!existingLocation) {
@@ -265,13 +265,13 @@ export class StoreLocationService {
   /**
    * Delete store location
    */
-  async deleteStoreLocation(id: string, tenantId: string, userId: string) {
+  async deleteStoreLocation(id: string, companyId: string, userId: string) {
     try {
-      await this.validateUserAccess(userId, tenantId, ["admin", "owner"]);
+      await this.validateUserAccess(userId, companyId, ["admin", "owner"]);
 
       // Check if location exists
       const existingLocation = await prisma.storeLocation.findFirst({
-        where: { id, tenantId },
+        where: { id, companyId },
         include: {
           _count: {
             select: {
@@ -320,30 +320,30 @@ export class StoreLocationService {
   async assignStaffToLocation(
     locationId: string,
     data: AssignStaffToLocationInput,
-    tenantId: string,
+    companyId: string,
     userId: string
   ) {
     try {
-      await this.validateUserAccess(userId, tenantId, [
+      await this.validateUserAccess(userId, companyId, [
         "admin",
         "owner",
         "manager",
       ]);
 
-      // Verify location exists and belongs to tenant
+      // Verify location exists and belongs to company
       const location = await prisma.storeLocation.findFirst({
-        where: { id: locationId, tenantId },
+        where: { id: locationId, companyId },
       });
 
       if (!location) {
         throw new Error("Store location not found");
       }
 
-      // Verify all staff members exist and belong to tenant
+      // Verify all staff members exist and belong to company
       const staff = await prisma.staff.findMany({
         where: {
           id: { in: data.staffIds },
-          tenantId,
+          companyId,
           isActive: true,
         },
       });
@@ -370,7 +370,7 @@ export class StoreLocationService {
       // Get updated location with assignments
       const updatedLocation = await this.getStoreLocationById(
         locationId,
-        tenantId,
+        companyId,
         userId
       );
 
@@ -394,12 +394,12 @@ export class StoreLocationService {
   /**
    * Get staff assigned to a location
    */
-  async getLocationStaff(locationId: string, tenantId: string, userId: string) {
+  async getLocationStaff(locationId: string, companyId: string, userId: string) {
     try {
-      await this.validateUserAccess(userId, tenantId);
+      await this.validateUserAccess(userId, companyId);
 
       const location = await prisma.storeLocation.findFirst({
-        where: { id: locationId, tenantId },
+        where: { id: locationId, companyId },
         include: {
           staffAssignments: {
             include: {
@@ -428,9 +428,9 @@ export class StoreLocationService {
   /**
    * Get store location statistics
    */
-  async getLocationStats(tenantId: string, userId: string) {
+  async getLocationStats(companyId: string, userId: string) {
     try {
-      await this.validateUserAccess(userId, tenantId);
+      await this.validateUserAccess(userId, companyId);
 
       const [
         totalLocations,
@@ -438,16 +438,16 @@ export class StoreLocationService {
         totalAssignments,
         locationsWithStaff,
       ] = await Promise.all([
-        prisma.storeLocation.count({ where: { tenantId } }),
-        prisma.storeLocation.count({ where: { tenantId, isActive: true } }),
+        prisma.storeLocation.count({ where: { companyId } }),
+        prisma.storeLocation.count({ where: { companyId, isActive: true } }),
         prisma.staffStoreLocation.count({
           where: {
-            storeLocation: { tenantId },
+            storeLocation: { companyId },
           },
         }),
         prisma.storeLocation.count({
           where: {
-            tenantId,
+            companyId,
             staffAssignments: {
               some: {},
             },
@@ -477,14 +477,14 @@ export class StoreLocationService {
    */
   private async validateUserAccess(
     userId: string,
-    tenantId: string,
+    companyId: string,
     allowedRoles?: string[]
   ) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -492,7 +492,7 @@ export class StoreLocationService {
       throw new Error("User not found or inactive");
     }
 
-    if (user.tenantId !== tenantId && user.role.name !== "admin") {
+    if (user.companyId !== companyId && user.role.name !== "admin") {
       throw new Error("Access denied: User does not belong to this company");
     }
 
@@ -515,7 +515,7 @@ export class StoreLocationService {
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { tenantId: true },
+        select: { companyId: true },
       });
 
       if (user) {
@@ -527,7 +527,7 @@ export class StoreLocationService {
             oldData: oldData || {},
             newData: newData || {},
             userId,
-            tenantId: user.tenantId,
+            companyId: user.companyId,
             ipAddress: null,
             userAgent: null,
           },

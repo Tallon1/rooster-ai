@@ -5,7 +5,6 @@ export * from "./common.types";
 export * from "./auth.types";
 export * from "./staff.types";
 export * from "./roster.types";
-export * from "./tenant.types";
 export * from "./user.types";
 export * from "./ai.types";
 export * from "./notification.types";

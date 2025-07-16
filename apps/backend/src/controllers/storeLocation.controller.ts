@@ -13,12 +13,12 @@ const storeLocationService = new StoreLocationService();
 export const createStoreLocation = async (req: Request, res: Response) => {
   try {
     const validatedData = createStoreLocationSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const location = await storeLocationService.createStoreLocation(
       validatedData,
-      tenantId,
+      companyId,
       userId
     );
 
@@ -45,12 +45,12 @@ export const createStoreLocation = async (req: Request, res: Response) => {
 export const getStoreLocation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const location = await storeLocationService.getStoreLocationById(
       id,
-      tenantId,
+      companyId,
       userId
     );
 
@@ -74,11 +74,11 @@ export const getStoreLocation = async (req: Request, res: Response) => {
 export const getAllStoreLocations = async (req: Request, res: Response) => {
   try {
     const filters = storeLocationFilterSchema.parse(req.query);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const result = await storeLocationService.getAllStoreLocations(
-      tenantId,
+      companyId,
       userId,
       filters
     );
@@ -107,13 +107,13 @@ export const updateStoreLocation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const validatedData = updateStoreLocationSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const location = await storeLocationService.updateStoreLocation(
       id,
       validatedData,
-      tenantId,
+      companyId,
       userId
     );
 
@@ -140,10 +140,10 @@ export const updateStoreLocation = async (req: Request, res: Response) => {
 export const deleteStoreLocation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
-    await storeLocationService.deleteStoreLocation(id, tenantId, userId);
+    await storeLocationService.deleteStoreLocation(id, companyId, userId);
 
     const response: ApiResponse = {
       success: true,
@@ -168,13 +168,13 @@ export const assignStaffToLocation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const validatedData = assignStaffToLocationSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const location = await storeLocationService.assignStaffToLocation(
       id,
       validatedData,
-      tenantId,
+      companyId,
       userId
     );
 
@@ -201,12 +201,12 @@ export const assignStaffToLocation = async (req: Request, res: Response) => {
 export const getLocationStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
     const staff = await storeLocationService.getLocationStaff(
       id,
-      tenantId,
+      companyId,
       userId
     );
 
@@ -231,10 +231,10 @@ export const getLocationStaff = async (req: Request, res: Response) => {
 
 export const getLocationStats = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
     const userId = req.user!.id;
 
-    const stats = await storeLocationService.getLocationStats(tenantId, userId);
+    const stats = await storeLocationService.getLocationStats(companyId, userId);
 
     const response: ApiResponse = {
       success: true,

@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAuthStore } from '@/store/authStore';
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
-interface DashboardLayoutProps {
+export default function DashboardLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+}) {
+  const { user, isAuthenticated } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Update any references from to companyId
+  useEffect(() => {
+    if (user?.companyId) {
+      // Initialize company-specific data
+      console.log('User company:', user.companyId);
+    }
+  }, [user?.companyId]);
 
   return (
     <div className="h-screen flex overflow-hidden bg-gray-100">

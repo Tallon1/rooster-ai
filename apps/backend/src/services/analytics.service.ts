@@ -4,7 +4,7 @@ import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, format } fro
 const prisma = new PrismaClient();
 
 export class AnalyticsService {
-  async getDashboardMetrics(tenantId: string) {
+  async getDashboardMetrics(companyId: string) {
     const now = new Date();
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
@@ -22,36 +22,36 @@ export class AnalyticsService {
       recentActivity
     ] = await Promise.all([
       // Staff metrics
-      prisma.staff.count({ where: { tenantId } }),
-      prisma.staff.count({ where: { tenantId, isActive: true } }),
+      prisma.staff.count({ where: { companyId } }),
+      prisma.staff.count({ where: { companyId, isActive: true } }),
       
       // Roster metrics
-      prisma.roster.count({ where: { tenantId, isTemplate: false } }),
-      prisma.roster.count({ where: { tenantId, isPublished: true, isTemplate: false } }),
+      prisma.roster.count({ where: { companyId, isTemplate: false } }),
+      prisma.roster.count({ where: { companyId, isPublished: true, isTemplate: false } }),
       
       // Shift metrics
       prisma.shift.count({
         where: {
-          roster: { tenantId },
+          roster: { companyId },
           startTime: { gte: weekStart, lte: weekEnd }
         }
       }),
       prisma.shift.count({
         where: {
-          roster: { tenantId },
+          roster: { companyId },
           startTime: { gte: monthStart, lte: monthEnd }
         }
       }),
       prisma.shift.count({
         where: {
-          roster: { tenantId },
+          roster: { companyId },
           startTime: { gte: now }
         }
       }),
       
       // Recent activity
       prisma.roster.findMany({
-        where: { tenantId },
+        where: { companyId },
         orderBy: { updatedAt: 'desc' },
         take: 5,
         select: {
@@ -84,12 +84,12 @@ export class AnalyticsService {
     };
   }
 
-  async getStaffUtilization(tenantId: string, days = 30) {
+  async getStaffUtilization(companyId: string, days = 30) {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
 
     const staffUtilization = await prisma.staff.findMany({
-      where: { tenantId, isActive: true },
+      where: { companyId, isActive: true },
       select: {
         id: true,
         name: true,
@@ -125,10 +125,10 @@ export class AnalyticsService {
     });
   }
 
-  async getDepartmentAnalytics(tenantId: string) {
+  async getDepartmentAnalytics(companyId: string) {
     const departments = await prisma.staff.groupBy({
       by: ['department'],
-      where: { tenantId, isActive: true },
+      where: { companyId, isActive: true },
       _count: { department: true },
       _avg: { hourlyRate: true }
     });
@@ -138,7 +138,7 @@ export class AnalyticsService {
         const shifts = await prisma.shift.count({
           where: {
             staff: {
-              tenantId,
+              companyId,
               department: dept.department,
               isActive: true
             },
@@ -162,14 +162,14 @@ export class AnalyticsService {
     });
   }
 
-  async getSchedulingTrends(tenantId: string, days = 30) {
+  async getSchedulingTrends(companyId: string, days = 30) {
     const endDate = new Date();
     const startDate = subDays(endDate, days);
 
     const dailyShifts = await prisma.shift.groupBy({
       by: ['startTime'],
       where: {
-        roster: { tenantId },
+        roster: { companyId },
         startTime: { gte: startDate, lte: endDate }
       },
       _count: { id: true }
@@ -191,10 +191,10 @@ export class AnalyticsService {
     })).sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  async getPositionDistribution(tenantId: string) {
+  async getPositionDistribution(companyId: string) {
     const positions = await prisma.staff.groupBy({
       by: ['position'],
-      where: { tenantId, isActive: true },
+      where: { companyId, isActive: true },
       _count: { position: true }
     });
 
@@ -207,10 +207,10 @@ export class AnalyticsService {
     }));
   }
 
-  async getCostAnalysis(tenantId: string, startDate: Date, endDate: Date) {
+  async getCostAnalysis(companyId: string, startDate: Date, endDate: Date) {
     const shifts = await prisma.shift.findMany({
       where: {
-        roster: { tenantId },
+        roster: { companyId },
         startTime: { gte: startDate, lte: endDate }
       },
       include: {

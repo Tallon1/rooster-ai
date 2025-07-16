@@ -4,7 +4,7 @@ export interface User {
   email: string;
   name: string;
   role: string;
-  tenantId: string;
+  companyId: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -37,7 +37,7 @@ export interface JWTPayload {
   userId: string;
   email: string;
   role: string;
-  tenantId: string;
+  companyId: string;
   iat: number;
   exp: number;
 }

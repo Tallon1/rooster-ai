@@ -9,7 +9,7 @@ export interface Shift extends BaseEntity {
   position: string;
   notes?: string;
   isConfirmed: boolean;
-  tenantId: string;
+  companyId: string;
 }
 
 export interface Roster extends BaseEntity {
@@ -17,7 +17,7 @@ export interface Roster extends BaseEntity {
   startDate: Date;
   endDate: Date;
   isPublished: boolean;
-  tenantId: string;
+  companyId: string;
   shifts: Shift[];
 }
 

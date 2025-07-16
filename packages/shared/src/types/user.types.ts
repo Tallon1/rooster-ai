@@ -4,7 +4,7 @@ export interface UserProfile extends BaseEntity {
   email: string;
   name: string;
   role: string;
-  tenantId: string;
+  companyId: string;
   isActive: boolean;
   lastLoginAt?: Date;
   preferences: UserPreferences;
@@ -57,7 +57,7 @@ export interface UserFilterInput {
 export interface UserHierarchyStats {
   totalUsers: number;
   usersByCompany: Array<{
-    tenantId: string;
+    companyId: string;
     _count: { id: number };
   }>;
   usersByRole: Array<{

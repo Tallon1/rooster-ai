@@ -24,7 +24,7 @@ export class UserManagementService {
       // Check if owner already exists for this company
       const existingOwner = await prisma.user.findFirst({
         where: {
-          tenantId: data.companyId,
+          companyId: data.companyId,
           role: {
             name: "owner",
           },
@@ -40,7 +40,7 @@ export class UserManagementService {
       // Get owner role for the company
       const ownerRole = await prisma.role.findFirst({
         where: {
-          tenantId: data.companyId,
+          companyId: data.companyId,
           name: "owner",
         },
       });
@@ -60,13 +60,13 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          tenantId: data.companyId,
+          companyId: data.companyId,
           roleId: ownerRole.id,
           isActive: true,
         },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -94,7 +94,7 @@ export class UserManagementService {
 
       // Determine company ID
       const companyId =
-        creator.role.name === "admin" ? data.companyId : creator.tenantId;
+        creator.role.name === "admin" ? data.companyId : creator.companyId;
 
       // Validate company capacity for managers
       await this.validateCompanyCapacity(companyId, "manager");
@@ -102,7 +102,7 @@ export class UserManagementService {
       // Get manager role
       const managerRole = await prisma.role.findFirst({
         where: {
-          tenantId: companyId,
+          companyId: companyId,
           name: "manager",
         },
       });
@@ -122,13 +122,13 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          tenantId: companyId,
+          companyId: companyId,
           roleId: managerRole.id,
           isActive: true,
         },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -157,7 +157,7 @@ export class UserManagementService {
 
       // Determine company ID
       const companyId =
-        creator.role.name === "admin" ? data.companyId : creator.tenantId;
+        creator.role.name === "admin" ? data.companyId : creator.companyId;
 
       // Validate company capacity
       await this.validateCompanyCapacity(companyId, "staff");
@@ -165,7 +165,7 @@ export class UserManagementService {
       // Get staff role
       const staffRole = await prisma.role.findFirst({
         where: {
-          tenantId: companyId,
+          companyId: companyId,
           name: "staff",
         },
       });
@@ -185,13 +185,13 @@ export class UserManagementService {
           name: `${data.firstName} ${data.lastName}`,
           passwordHash,
           phone: data.phone,
-          tenantId: companyId,
+          companyId: companyId,
           roleId: staffRole.id,
           isActive: true,
         },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -238,11 +238,11 @@ export class UserManagementService {
       if (requestor.role.name === "admin") {
         // Admins can see all users
         if (companyId) {
-          where.tenantId = companyId;
+          where.companyId = companyId;
         }
       } else {
         // Non-admins can only see users in their company
-        where.tenantId = requestor.tenantId;
+        where.companyId = requestor.companyId;
 
         // Owners and Managers cannot see admin users
         where.role = {
@@ -281,7 +281,7 @@ export class UserManagementService {
         where,
         include: {
           role: true,
-          tenant: {
+          company: {
             select: {
               id: true,
               name: true,
@@ -326,7 +326,7 @@ export class UserManagementService {
       // Get user to update
       const userToUpdate = await prisma.user.findUnique({
         where: { id: userId },
-        include: { role: true, tenant: true },
+        include: { role: true, company: true },
       });
 
       if (!userToUpdate) {
@@ -336,7 +336,7 @@ export class UserManagementService {
       // Validate permissions
       if (
         requestor.role.name !== "admin" &&
-        requestor.tenantId !== userToUpdate.tenantId
+        requestor.companyId !== userToUpdate.companyId
       ) {
         throw new Error(
           "Access denied: Cannot update users from other companies"
@@ -364,7 +364,7 @@ export class UserManagementService {
         },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -396,7 +396,7 @@ export class UserManagementService {
       // Validate permissions
       if (
         requestor.role.name !== "admin" &&
-        requestor.tenantId !== userToDeactivate.tenantId
+        requestor.companyId !== userToDeactivate.companyId
       ) {
         throw new Error(
           "Access denied: Cannot deactivate users from other companies"
@@ -422,7 +422,7 @@ export class UserManagementService {
         data: { isActive: false },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -444,7 +444,7 @@ export class UserManagementService {
 
       const users = await prisma.user.findMany({
         where: {
-          tenantId: companyId,
+          companyId: companyId,
           role: {
             name: {
               in: ["manager", "staff"], // Owners can see Managers and Staff
@@ -481,7 +481,7 @@ export class UserManagementService {
         include: { role: true },
       });
 
-      if (!user || user.tenantId !== owner.tenantId) {
+      if (!user || user.companyId !== owner.companyId) {
         throw new Error("User not found or access denied");
       }
 
@@ -495,7 +495,7 @@ export class UserManagementService {
       // Get the new role
       const role = await prisma.role.findFirst({
         where: {
-          tenantId: owner.tenantId,
+          companyId: owner.companyId,
           name: newRole,
         },
       });
@@ -510,7 +510,7 @@ export class UserManagementService {
         data: { roleId: role.id },
         include: {
           role: true,
-          tenant: true,
+          company: true,
         },
       });
 
@@ -535,11 +535,11 @@ export class UserManagementService {
         // Admins can see global stats
       } else {
         // Others can only see their company stats
-        whereClause.tenantId = requestor.tenantId;
+        whereClause.companyId = requestor.companyId;
       }
 
       const userStats = await prisma.user.groupBy({
-        by: ["tenantId"],
+        by: ["companyId"],
         where: whereClause,
         _count: {
           id: true,
@@ -586,7 +586,7 @@ export class UserManagementService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -599,7 +599,7 @@ export class UserManagementService {
     }
 
     // Verify user belongs to Rooster AI company
-    if (user.tenant.domain !== "roosterai.ie") {
+    if (user.company.domain !== "roosterai.ie") {
       throw new Error("Invalid admin user: Must belong to Rooster AI company");
     }
 
@@ -614,7 +614,7 @@ export class UserManagementService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -636,7 +636,7 @@ export class UserManagementService {
       where: { id: userId },
       include: {
         role: true,
-        tenant: true,
+        company: true,
       },
     });
 
@@ -648,7 +648,7 @@ export class UserManagementService {
   }
 
   private async validateCompanyCapacity(companyId: string, userType: string) {
-    const company = await prisma.tenant.findUnique({
+    const company = await prisma.company.findUnique({
       where: { id: companyId },
       include: {
         users: {
@@ -701,7 +701,7 @@ export class UserManagementService {
 
   private async createStaffRecord(
     userId: string,
-    tenantId: string,
+    companyId: string,
     staffData: any
   ) {
     // Create corresponding staff record with additional details
@@ -714,7 +714,7 @@ export class UserManagementService {
         department: staffData.department,
         hourlyRate: staffData.hourlyRate,
         startDate: new Date(staffData.startDate),
-        tenantId,
+        companyId,
         isActive: true,
       },
     });

@@ -11,7 +11,7 @@ export interface Staff extends BaseEntity {
   startDate: Date;
   endDate?: Date;
   isActive: boolean;
-  tenantId: string;
+  companyId: string;
   avatar?: string;
   preferences: Record<string, any>;
   availability?: StaffAvailability[];

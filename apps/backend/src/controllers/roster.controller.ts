@@ -8,9 +8,9 @@ const rosterService = new RosterService();
 export const createRoster = async (req: Request, res: Response) => {
   try {
     const validatedData = createRosterSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const roster = await rosterService.createRoster(validatedData, tenantId);
+    const roster = await rosterService.createRoster(validatedData, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -32,9 +32,9 @@ export const createRoster = async (req: Request, res: Response) => {
 export const getRoster = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const roster = await rosterService.getRosterById(id, tenantId);
+    const roster = await rosterService.getRosterById(id, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -55,9 +55,9 @@ export const getRoster = async (req: Request, res: Response) => {
 export const getAllRosters = async (req: Request, res: Response) => {
   try {
     const filters = rosterFilterSchema.parse(req.query);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const result = await rosterService.getAllRosters(tenantId, filters);
+    const result = await rosterService.getAllRosters(companyId, filters);
 
     const response: ApiResponse = {
       success: true,
@@ -80,9 +80,9 @@ export const updateRoster = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const validatedData = updateRosterSchema.parse(req.body);
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const roster = await rosterService.updateRoster(id, validatedData, tenantId);
+    const roster = await rosterService.updateRoster(id, validatedData, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -104,9 +104,9 @@ export const updateRoster = async (req: Request, res: Response) => {
 export const deleteRoster = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    await rosterService.deleteRoster(id, tenantId);
+    await rosterService.deleteRoster(id, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -127,9 +127,9 @@ export const deleteRoster = async (req: Request, res: Response) => {
 export const publishRoster = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const roster = await rosterService.publishRoster(id, tenantId);
+    const roster = await rosterService.publishRoster(id, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -151,9 +151,9 @@ export const publishRoster = async (req: Request, res: Response) => {
 export const addShift = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const shift = await rosterService.addShiftToRoster(id, req.body, tenantId);
+    const shift = await rosterService.addShiftToRoster(id, req.body, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -175,9 +175,9 @@ export const addShift = async (req: Request, res: Response) => {
 export const updateShift = async (req: Request, res: Response) => {
   try {
     const { shiftId } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const shift = await rosterService.updateShift(shiftId, req.body, tenantId);
+    const shift = await rosterService.updateShift(shiftId, req.body, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -199,9 +199,9 @@ export const updateShift = async (req: Request, res: Response) => {
 export const deleteShift = async (req: Request, res: Response) => {
   try {
     const { shiftId } = req.params;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    await rosterService.deleteShift(shiftId, tenantId);
+    await rosterService.deleteShift(shiftId, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -223,9 +223,9 @@ export const createFromTemplate = async (req: Request, res: Response) => {
   try {
     const { templateId } = req.params;
     const { startDate, endDate } = req.body;
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const roster = await rosterService.createRosterFromTemplate(templateId, startDate, endDate, tenantId);
+    const roster = await rosterService.createRosterFromTemplate(templateId, startDate, endDate, companyId);
 
     const response: ApiResponse = {
       success: true,
@@ -246,9 +246,9 @@ export const createFromTemplate = async (req: Request, res: Response) => {
 
 export const getRosterStats = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.user!.tenantId;
+    const companyId = req.user!.companyId;
 
-    const stats = await rosterService.getRosterStats(tenantId);
+    const stats = await rosterService.getRosterStats(companyId);
 
     const response: ApiResponse = {
       success: true,

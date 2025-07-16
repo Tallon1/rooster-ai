@@ -5,7 +5,7 @@ export interface StoreLocation extends BaseEntity {
   name: string;
   address: string;
   isActive: boolean;
-  tenantId: string;
+  companyId: string;
   staffAssignments?: StaffAssignmentWithDetails[];
   staffCount?: number; // ✅ Add staff count for frontend display
   _count?: {

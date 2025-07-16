@@ -11,7 +11,7 @@ export class AuthService {
   private readonly jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15m';
   private readonly jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
-  async register(data: RegisterInput, tenantId: string): Promise<AuthResponse> {
+  async register(data: RegisterInput, companyId: string): Promise<AuthResponse> {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email }
@@ -24,16 +24,16 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(data.password, 12);
 
-    // Get default role for tenant
+    // Get default role for company
     const defaultRole = await prisma.role.findFirst({
       where: {
-        tenantId,
+        companyId,
         name: 'staff'
       }
     });
 
     if (!defaultRole) {
-      throw new Error('Default role not found for tenant');
+      throw new Error('Default role not found for company');
     }
 
     // Create user
@@ -42,12 +42,12 @@ export class AuthService {
         email: data.email,
         name: data.name,
         passwordHash,
-        tenantId,
+        companyId,
         roleId: defaultRole.id
       },
       include: {
         role: true,
-        tenant: true
+        company: true
       }
     });
 
@@ -60,7 +60,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role.name,
-        tenantId: user.tenantId,
+        companyId: user.companyId,
         isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -70,12 +70,12 @@ export class AuthService {
   }
 
   async login(data: LoginInput): Promise<AuthResponse> {
-    // Find user with role and tenant
+    // Find user with role and company
     const user = await prisma.user.findUnique({
       where: { email: data.email },
       include: {
         role: true,
-        tenant: true
+        company: true
       }
     });
 
@@ -104,7 +104,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role.name,
-        tenantId: user.tenantId,
+        companyId: user.companyId,
         isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -153,7 +153,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role.name,
-      tenantId: user.tenantId,
+      companyId: user.companyId,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + this.parseExpiresIn(this.jwtExpiresIn)
     };
@@ -164,7 +164,7 @@ export class AuthService {
   private generateRefreshToken(user: any): string {
     const payload = {
       userId: user.id,
-      tenantId: user.tenantId,
+      companyId: user.companyId,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + this.parseExpiresIn(this.jwtRefreshExpiresIn)
     };

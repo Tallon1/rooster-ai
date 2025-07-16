@@ -104,12 +104,12 @@ export class NotificationService {
           include: {
             staff: {
               include: {
-                tenant: true,
+                company: true,
               },
             },
           },
         },
-        tenant: true,
+        company: true,
       },
     });
 
@@ -117,10 +117,10 @@ export class NotificationService {
       throw new Error('Roster not found');
     }
 
-    // Get all users in the tenant who should be notified
-    const tenantUsers = await prisma.user.findMany({
+    // Get all users in the company who should be notified
+    const companyUsers = await prisma.user.findMany({
       where: {
-        tenantId: roster.tenantId,
+        companyId: roster.companyId,
         isActive: true,
       },
     });
@@ -132,7 +132,7 @@ export class NotificationService {
 
     for (const staff of uniqueStaff) {
       // Find corresponding user account
-      const user = tenantUsers.find(u => u.email === staff.email);
+      const user = companyUsers.find(u => u.email === staff.email);
       if (user) {
         await this.createNotification(
           user.id,
@@ -165,7 +165,7 @@ export class NotificationService {
         staff: true,
         roster: {
           include: {
-            tenant: true,
+            company: true,
           },
         },
       },
@@ -179,7 +179,7 @@ export class NotificationService {
     const user = await prisma.user.findFirst({
       where: {
         email: shift.staff.email,
-        tenantId: shift.roster.tenantId,
+        companyId: shift.roster.companyId,
       },
     });
 
